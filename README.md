@@ -304,7 +304,6 @@ https://api.ejemplo.com/llms.txt      →  descubre "api-read" y "api-write"
 ---
 
 
----
 
 ## Limitaciones conocidas
 
