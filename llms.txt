@@ -1,0 +1,51 @@
+# placeholder-img
+
+> HTTP API that returns SVG placeholder images for UI mockups. Zero auth, zero config, permanent cache.
+
+## Endpoint
+
+`GET https://img.automators.work/{width}x{height}[?bg={hex}]`
+
+## Parameters
+
+- `width` (int, required) — image width in px, max 4000
+- `height` (int, required) — image height in px, max 4000
+- `bg` (string, optional) — background color as 6-digit hex without `#`, default `cccccc`. Invalid values fall back to default.
+
+## Response
+
+- `200` → `Content-Type: image/svg+xml`, body is an SVG showing `{width}×{height}` centered. Text color auto-picks between `#555` (light bg) and `#ddd` (dark bg) based on luminance.
+- `400` → plain-text error if the path does not match `{int}x{int}`.
+
+## Cache
+
+All successful responses: `Cache-Control: public, max-age=31536000, immutable`.
+
+## Examples
+
+- `/400x300` — neutral gray 400×300 placeholder
+- `/400x300?bg=1e3a5f` — dark blue 400×300 placeholder
+- `/1200x400?bg=f97316` — orange hero-size banner
+
+## Usage in HTML/CSS
+
+```html
+<img src="https://img.automators.work/800x450?bg=1e3a5f" alt="hero">
+```
+
+```css
+.hero { background-image: url("https://img.automators.work/1200x400?bg=1e3a5f"); }
+```
+
+## Notes for agents
+
+- No rate limit beyond Cloudflare's platform default.
+- Stateless. Safe to call in loops to enumerate mockup sizes.
+- The API has no other paths. Do not attempt authentication, search, or listing endpoints — they do not exist.
+
+## Skills
+
+Remote Agent Skills published by this domain. See the RFC at `/docs/rfc-skills-in-llms-txt` for the proposed format.
+
+- [placeholder](/skills/placeholder/SKILL.md): generate SVG placeholder image URLs for UI mockups via this API. <!-- skill: {"version":"1.0.0","license":"MIT"} -->
+- [api-client](/skills/api-client/SKILL.md): generic HTTP API client patterns for consuming REST and JSON APIs. <!-- skill: {"version":"1.0.0","license":"MIT"} -->

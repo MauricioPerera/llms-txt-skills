@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://img.automators.work/schema/llms-txt-skills.schema.json",
+  "title": "llms.txt Skills Discovery Schema",
+  "description": "JSON Schema para validar la salida del parser de seccion ## Skills de llms.txt",
+  "type": "object",
+  "required": ["source", "skills", "count"],
+  "properties": {
+    "source": {
+      "type": "string",
+      "description": "URL o ruta local del llms.txt parseado"
+    },
+    "skills": {
+      "type": "array",
+      "description": "Lista de skills descubiertas en la seccion ## Skills",
+      "items": {
+        "type": "object",
+        "required": ["title", "url", "description"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Titulo de la skill (texto entre corchetes)"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL absoluta o relativa al SKILL.md o bundle"
+          },
+          "description": {
+            "type": "string",
+            "description": "Descripcion de cuando usar esta skill"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Metadatos inline opcionales del HTML comment",
+            "properties": {
+              "version": {
+                "type": "string",
+                "description": "Version semantica de la skill"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{64}$",
+                "description": "SHA-256 del contenido del SKILL.md"
+              },
+              "requires": {
+                "type": "string",
+                "description": "Version minima requerida del agente o runtime"
+              },
+              "license": {
+                "type": "string",
+                "description": "Licencia de la skill (ej: MIT, Apache-2.0)"
+              },
+              "homepage": {
+                "type": "string",
+                "format": "uri",
+                "description": "URL de la pagina principal del proyecto"
+              }
+            },
+            "additionalProperties": false
+          },
+          "metadata_raw": {
+            "type": "string",
+            "description": "Texto crudo del metadata si no se pudo parsear como JSON"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Numero total de skills descubiertas"
+    }
+  },
+  "additionalProperties": false
+}
