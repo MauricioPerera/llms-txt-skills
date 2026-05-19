@@ -1,7 +1,7 @@
 # RFC: Publishing Agent Skills through `llms.txt`
 
-- **Status:** Draft (v0.2)
-- **Date:** 2026-04-21
+- **Status:** Draft (v0.3)
+- **Date:** 2026-05-19
 - **Author:** automators.work
 - **Depends on:** [llmstxt.org](https://llmstxt.org/) spec, [Agent Skills](https://agentskills.io) (`SKILL.md`)
 - **Reference implementation:** [img.automators.work](https://img.automators.work)
@@ -157,7 +157,84 @@ This is not a defect of the proposal — it is the current state of the ecosyste
 
 As agent runtimes evolve toward more proactive web discovery, the `## Skills` section provides the declaration primitive those systems will need.
 
+### 5.1 Proactive Discovery Mechanisms
+
+To reduce the friction of skill discovery from "user must know to ask" to "agent finds it automatically", this RFC proposes four optional mechanisms that sites MAY implement and agents MAY support. None are required for compliance, but each lowers the barrier for the agent side.
+
+#### Mechanism A — HTTP `Link` header
+
+Every HTTP response from the domain MAY include a `Link` header pointing to `llms.txt`:
+
+```
+Link: </llms.txt>; rel="llms.txt"
+```
+
+**Why it matters:** When the agent makes its *first* request to the domain (e.g., loading the homepage or calling an API endpoint), it receives this header for free. No extra round-trip is needed to probe for `llms.txt`. The agent parses the header, fetches `llms.txt`, and discovers skills before the user even asks.
+
+**Reference implementation:** [DemoShop](https://demoshop-88e.pages.dev) sends this header on every API response.
+
+#### Mechanism B — DNS TXT record
+
+The domain MAY publish a DNS TXT record:
+
+```
+demoshop-88e.pages.dev. 300 IN TXT "llms-txt=https://demoshop-88e.pages.dev/llms.txt"
+```
+
+**Why it matters:** DNS resolution is often faster than HTTP and can be cached at the resolver. The agent can discover the `llms.txt` URL *before* making any HTTP request, allowing it to preload skills or show them to the user at the exact moment the domain is mentioned.
+
+**Limitation:** DNS TXT records are limited to ~255 bytes per string and require DNS access, which sandboxed agents may not have.
+
+#### Mechanism C — HTML `<meta>` tag
+
+In addition to the existing `link rel="alternate"`, the site MAY include a visible `<meta>` tag in the HTML `<head>`:
+
+```html
+<meta name="llms-txt" content="/llms.txt">
+```
+
+**Why it matters:** It is more discoverable by HTML parsers than `rel="alternate"` (which some agents ignore). It also signals to developers inspecting the page source that the site exposes agent-facing resources.
+
+#### Mechanism D — The `/llms.txt` convention probe
+
+Similar to `robots.txt` or `favicon.ico`, agents MAY adopt the convention:
+
+> "On first encounter with any new domain, attempt `HEAD /llms.txt`. If it returns 200, read it. If 404, assume no skills are published and proceed normally."
+
+**Why it matters:** It requires zero cooperation from the site (the file either exists or it doesn't). It costs one cheap HEAD request (~200 bytes). It works for every domain on the web, not just those that implement headers or DNS records.
+
+**Trade-off:** It adds one round-trip per new domain. Agents SHOULD cache negative responses (404) to avoid repeated probes.
+
+### 5.2 Recommended Agent Behavior (Non-Normative)
+
+When an agent runtime decides to implement proactive discovery, this is the recommended flow:
+
+```
+1. Agent encounters a domain (user instruction, URL in context, search result)
+2. Check local cache for llms.txt of this domain
+   2a. Hit -> skip to step 5
+   2b. Miss -> continue
+3. Probe for llms.txt using any available mechanism:
+   3a. Check HTTP Link header of the first request already made
+   3b. Check DNS TXT record (if DNS available)
+   3c. HEAD /llms.txt (fallback, cache 404 for 24h)
+4. If llms.txt found, parse and cache it
+5. If ## Skills exists, surface skills to the user
+6. User opts in explicitly to one or more skills
+7. Agent fetches SKILL.md, verifies sha256 if declared, loads it
+8. Agent caches the skill per HTTP cache semantics
+```
+
+**Key principle:** The user opt-in (step 6) remains mandatory. Even with automatic discovery, agents MUST NOT auto-install skills without explicit approval.
+
+**Cache strategy:**
+- `llms.txt`: cache per HTTP `Cache-Control` (typically short TTL, e.g., 5 minutes).
+- Negative 404: cache for 24 hours to avoid repeated probes.
+- `SKILL.md`: cache per HTTP `Cache-Control` (can be long, e.g., immutable).
+
 ---
+
+## 6. Why This Is Worth Doing---
 
 ## 6. Why This Is Worth Doing
 
@@ -204,6 +281,7 @@ As agent runtimes evolve toward more proactive web discovery, the `## Skills` se
 
 ## 10. Changelog
 
+- **v0.3 (2026-05-19):** Expanded agent-side discovery triggers with four mechanisms (HTTP Link header, DNS TXT, HTML meta tag, convention probe); added recommended agent behavior flow; added cache strategy; updated examples with DemoShop.
 - **v0.2 (2026-04-21):** Added §3 ecosystem comparison; expanded §4 with cross-origin security rule; added §5 on discovery triggers; added §1.2 infrastructure barrier argument; refined two use-case patterns in §2.4; updated open questions.
 - **v0.1 (2026-04-20):** Initial draft.
 
