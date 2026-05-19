@@ -26,4 +26,3 @@ jobs:
       - name: Test parser and resolve
         run: |
           python scripts/parse_llms_txt_skills.py ./llms.txt --resolve
-          python scripts/parse_llms_txt_skills.py https://img.automators.work/llms.txt --resolve

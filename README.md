@@ -152,7 +152,7 @@ llms-txt-skills/
 **Opcional — verificación de integridad:** agrega `sha256` al metadata inline:
 
 ```markdown
-- [mi-skill](/skills/mi-skill/SKILL.md): descripción de cuándo usar esta skill. <!-- skill: {"version":"1.0.0","license":"MIT","sha256":"9a3aac77d2eea9943eae288f07745c8501d940ce12444070f8a16d1fae6ca022"} -->
+- [mi-skill](/skills/mi-skill/SKILL.md): descripción de cuándo usar esta skill. <!-- skill: {"version":"1.0.0","license":"MIT","sha256":"f427124e22c7bfc3d45271081e2d5eff3b1f9d740f9685748f9d4abd99dd03df"} -->
 ```
 
 Para generar el hash de tu `SKILL.md`:
@@ -307,3 +307,5 @@ https://api.ejemplo.com/llms.txt      →  descubre "api-read" y "api-write"
 ## Licencia
 
 MIT — este estándar y su implementación de referencia son de dominio público para su adopción.
+
+
