@@ -239,7 +239,6 @@ python scripts/parse_llms_txt_skills.py ./llms.txt --resolve
 
 ## Validador
 Incluimos [`scripts/validate.py`](scripts/validate.py), un validador de referencia que verifica un **subset de la spec de Agent Skills** (no la spec completa de `agentskills.io`, que está fuera del alcance de este RFC). Valida:
-Incluimos [`scripts/validate.py`](scripts/validate.py) que valida:
 
 - Que `llms.txt` tenga una sección `## Skills` bien formada.
 - Que cada skill referenciada exista y tenga YAML frontmatter válido.
