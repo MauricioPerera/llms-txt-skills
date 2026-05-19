@@ -148,6 +148,19 @@ llms-txt-skills/
 - [mi-skill](/skills/mi-skill/SKILL.md): descripción de cuándo usar esta skill. <!-- skill: {"version":"1.0.0","license":"MIT"} -->
 ```
 
+
+**Opcional — verificación de integridad:** agrega `sha256` al metadata inline:
+
+```markdown
+- [mi-skill](/skills/mi-skill/SKILL.md): descripción de cuándo usar esta skill. <!-- skill: {"version":"1.0.0","license":"MIT","sha256":"9a3aac77d2eea9943eae288f07745c8501d940ce12444070f8a16d1fae6ca022"} -->
+```
+
+Para generar el hash de tu `SKILL.md`:
+
+```bash
+sha256sum skills/mi-skill/SKILL.md
+```
+
 ### Paso 2: Crea tu `SKILL.md`
 
 ```markdown
@@ -225,7 +238,7 @@ python scripts/parse_llms_txt_skills.py ./llms.txt --resolve
 ---
 
 ## Validador
-
+Incluimos [`scripts/validate.py`](scripts/validate.py), un validador de referencia que verifica un **subset de la spec de Agent Skills** (no la spec completa de `agentskills.io`, que está fuera del alcance de este RFC). Valida:
 Incluimos [`scripts/validate.py`](scripts/validate.py) que valida:
 
 - Que `llms.txt` tenga una sección `## Skills` bien formada.

@@ -57,14 +57,14 @@
                 "description": "URL de la pagina principal del proyecto"
               }
             },
-            "additionalProperties": false
+            "additionalProperties": true
           },
           "metadata_raw": {
             "type": "string",
             "description": "Texto crudo del metadata si no se pudo parsear como JSON"
           }
         },
-        "additionalProperties": false
+        "additionalProperties": true
       }
     },
     "count": {
@@ -73,5 +73,5 @@
       "description": "Numero total de skills descubiertas"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true
 }

@@ -137,8 +137,17 @@ def _parse_skill_item(raw: str) -> dict[str, Any] | None:
 
 
 def resolve_url(skill_url: str, base_url: str) -> str:
-    """Resuelve URLs relativas a absolutas usando la URL base del llms.txt."""
-    return urllib.parse.urljoin(base_url, skill_url)
+    """Resuelve URLs relativas a absolutas usando la fuente como base."""
+    # Si la fuente es una URL HTTP(S), usar urljoin
+    if base_url.startswith(("http://", "https://")):
+        return urllib.parse.urljoin(base_url, skill_url)
+
+    # Si la fuente es un archivo local, resolver relativo al directorio del llms.txt
+    base_path = Path(base_url).parent.resolve()
+    # Si la skill_url empieza con /, tratar como relativo al directorio del llms.txt
+    # Si es relativa sin /, urljoin de pathlib la maneja bien
+    resolved = (base_path / skill_url.lstrip("/")).resolve()
+    return str(resolved)
 
 
 def main() -> int:
@@ -156,7 +165,7 @@ def main() -> int:
     try:
         text = fetch_content(args.source)
     except Exception as e:
-        print(f"Error leyendo fuente: {e}", file=sys.stderr)
+        print(f"[ERROR] Error leyendo fuente: {e}", file=sys.stderr)
         return 1
 
     skills = parse_skills_section(text)
