@@ -232,6 +232,27 @@ When an agent runtime decides to implement proactive discovery, this is the reco
 - Negative 404: cache for 24 hours to avoid repeated probes.
 - `SKILL.md`: cache per HTTP `Cache-Control` (can be long, e.g., immutable).
 
+### 5.3 Observed Execution Gap
+
+Discovery (Section 5) is only half the problem. Even when an agent successfully finds and reads a `SKILL.md`, there is no guarantee it will *execute* the skill according to its instructions.
+
+**Empirical evidence from DemoShop:** In a live test, an agent:
+1. Discovered the `cart-add` skill via `llms.txt`.
+2. Downloaded and read `SKILL.md`, which specified a Python `urllib` pattern with explicit headers and error handling.
+3. Ignored the prescribed pattern and used its generic PowerShell `Invoke-WebRequest` tool instead.
+
+The skill was treated as "interesting documentation" rather than as a "behavioral contract" that overrides the agent's default tools. The API call succeeded, but the agent did not follow the skill's intent: it used different tooling, different error handling, and different conventions than those the site designed.
+
+**Why this happens:**
+- Agent runtimes do not have a "skill execution mode" that suspends generic tools and forces compliance with a downloaded `SKILL.md`.
+- Skills are not sandboxed or enforced; they are suggestions that the model may or may not follow.
+- The reward function of the agent ("complete the user's task") does not penalize tool substitution if the outcome is similar.
+
+**Implications:**
+- A publisher cannot assume that publishing a skill guarantees the agent will use it as written.
+- The RFC defines *what* to publish and *where* to find it, but not *how* the runtime must enforce execution.
+- This is intentionally out of scope (Section 7), but it is a real, observable gap that future work should address.
+
 ---
 
 ## 6. Why This Is Worth Doing---
