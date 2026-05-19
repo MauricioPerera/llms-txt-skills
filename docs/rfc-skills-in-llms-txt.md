@@ -109,6 +109,8 @@ Step 5 is mandatory. Agents MUST NOT auto-install or auto-activate skills withou
 
 *Example:* `img.automators.work` teaches agents to call `/{width}x{height}?bg={hex}` to generate placeholder images.
 
+*Example:* [DemoShop](https://demoshop-88e.pages.dev) publishes three skills (product-search, cart-add, checkout-complete) that teach agents to browse a catalog, add items to a cart, and complete a purchase via its public HTTP API — all without authentication or server-side sessions.
+
 **Pattern B — Interaction instructions.** The site has no dedicated API but wants to describe how an agent should interact with it. The skill contains heuristics, preferred phrasing, or task decomposition patterns.
 
 *Example:* A documentation site teaches agents to quote specific sections when answering questions about its content.
@@ -204,3 +206,4 @@ As agent runtimes evolve toward more proactive web discovery, the `## Skills` se
 
 - **v0.2 (2026-04-21):** Added §3 ecosystem comparison; expanded §4 with cross-origin security rule; added §5 on discovery triggers; added §1.2 infrastructure barrier argument; refined two use-case patterns in §2.4; updated open questions.
 - **v0.1 (2026-04-20):** Initial draft.
+

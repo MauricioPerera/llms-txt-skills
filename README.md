@@ -301,9 +301,88 @@ https://api.ejemplo.com/llms.txt      →  descubre "api-read" y "api-write"
                                          →  el usuario elige cuál usar
 ```
 
+### Ejemplo 4: Tienda online con carrito y checkout
+
+```
+https://demoshop-88e.pages.dev/llms.txt  →  descubre 3 skills:
+                                              - product-search (buscar productos)
+                                              - cart-add (agregar al carrito)
+                                              - checkout-complete (finalizar compra)
+                                          →  el agente busca, agrega y compra sin auth
+```
+
+Ver el flujo completo documentado en la sección [DemoShop](#demoshop--flujo-completo-probado) más abajo.
+
+
 ---
 
 
+
+---
+
+## DemoShop — flujo completo probado
+
+[DemoShop](https://demoshop-88e.pages.dev) es una tienda demo desplegada en Cloudflare Pages que implementa el estándar `## Skills` con 3 skills funcionales. Es un caso de uso real del **Pattern A — API wrapping** del RFC: el sitio tiene una API HTTP pública y publica skills para que los agentes sepan cómo consumirla.
+
+### Skills publicadas
+
+| Skill | Cuándo usar | Endpoint principal |
+|---|---|---|
+| [product-search](https://demoshop-88e.pages.dev/skills/product-search/SKILL.md) | Buscar productos por nombre, categoría o descripción | `GET /api/products?q=...` |
+| [cart-add](https://demoshop-88e.pages.dev/skills/cart-add/SKILL.md) | Agregar productos al carrito | `POST /api/cart` |
+| [checkout-complete](https://demoshop-88e.pages.dev/skills/checkout-complete/SKILL.md) | Completar un pedido con datos del cliente | `POST /api/checkout` |
+
+### Flujo simulado de compra
+
+Un agente que lea `llms.txt` puede ejecutar este flujo completo sin intervención humana (salvo el opt-in obligatorio de las skills):
+
+```
+PASO 1: Descubrimiento
+  GET https://demoshop-88e.pages.dev/llms.txt
+  → Parsea ## Skills, encuentra 3 skills disponibles
+  → Pide opt-in al usuario para activarlas
+
+PASO 2: Búsqueda
+  GET https://demoshop-88e.pages.dev/api/products?q=bluetooth
+  → {"products": [{"id":1, "name":"Auriculares Bluetooth", "price":29.99}]}
+  → Agente elige producto ID 1
+
+PASO 3: Carrito
+  POST https://demoshop-88e.pages.dev/api/cart
+  Body: {"product_id": 1, "quantity": 2}
+  → {"success": true, "message": "Agregado 2 x producto #1 al carrito"}
+
+PASO 4: Checkout
+  POST https://demoshop-88e.pages.dev/api/checkout
+  Body: {"customer_name":"Ana Lopez","email":"ana@ejemplo.com","address":"Av. Revolucion 456, CDMX"}
+  → {"success": true, "order_id": "ORD-MPCWLKHZ", "status": "confirmado"}
+```
+
+### Código fuente
+
+El proyecto completo está en un repo separado. Estructura:
+
+```
+llms-shop-demo/
+├── index.html                  # Frontend
+├── api/products.json           # Catálogo (8 productos)
+├── functions/                  # Cloudflare Pages Functions
+│   ├── api/products/index.js
+│   ├── api/products/[id].js
+│   ├── api/cart.js
+│   └── api/checkout.js
+├── llms.txt                    # Espec API + ## Skills
+└── skills/
+    ├── product-search/SKILL.md
+    ├── cart-add/SKILL.md
+    └── checkout-complete/SKILL.md
+```
+
+### Lecciones del demo
+
+- **Sin autenticación:** el flujo completo funciona stateless, sin sesiones ni tokens.
+- **Skills atómicas:** cada operación (buscar, agregar, comprar) tiene su propia skill. El agente puede usarlas individualmente o en secuencia.
+- **Sin servidor MCP:** todo corre como archivos estáticos + functions serverless en Cloudflare Pages.
 
 ## Limitaciones conocidas
 
