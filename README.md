@@ -243,7 +243,7 @@ Incluimos [`scripts/validate.py`](scripts/validate.py), un validador de referenc
 - Que `llms.txt` tenga una sección `## Skills` bien formada.
 - Que cada skill referenciada exista y tenga YAML frontmatter válido.
 - Que los metadatos inline sean JSON válido.
-- Que las URLs resuelvan correctamente (mismo dominio).
+- Que los archivos de skill locales existan y resuelvan correctamente. (Para URLs remotas, la verificación de contenido y dominio es responsabilidad del agente runtime).
 
 ```bash
 python scripts/validate.py ./llms.txt

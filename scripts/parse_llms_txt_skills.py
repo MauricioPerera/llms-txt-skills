@@ -147,7 +147,7 @@ def resolve_url(skill_url: str, base_url: str) -> str:
     # Si la skill_url empieza con /, tratar como relativo al directorio del llms.txt
     # Si es relativa sin /, urljoin de pathlib la maneja bien
     resolved = (base_path / skill_url.lstrip("/")).resolve()
-    return str(resolved)
+    return str(resolved).replace(chr(92), chr(47))
 
 
 def main() -> int:
