@@ -303,8 +303,26 @@ https://api.ejemplo.com/llms.txt      →  descubre "api-read" y "api-write"
 
 ---
 
+
+---
+
+## Limitaciones conocidas
+
+El parser y validador de este repo son **herramientas de referencia**, no producción lista. Estos son los límites documentados:
+
+1. **Parser YAML frontmatter (validate.py):** maneja solo pares `key: value` planos. No soporta listas, objetos anidados, ni multi-line strings (`|`, `>`). Skills con frontmatter complejo pueden pasar validación incorrecta o fallar injustamente.
+
+2. **Regex de URLs:** soporta un nivel de paréntesis balanceados, pero no múltiples niveles ni caracteres de escape complejos en la URL del link markdown.
+
+3. **Sub-headings dentro de `## Skills`:** un heading de nivel 3 (`### ...`) dentro de la sección se adjunta a la descripción del item anterior en lugar de terminar la sección. El RFC asume una lista plana.
+
+4. **Verificación `sha256`:** el validador valida formato (64 hex chars) pero no compara el hash contra el contenido real del archivo. Esa verificación es responsabilidad del agente runtime.
+
+5. **Sincronización `.well-known/skills/default/SKILL.md`:** es una copia manual de `skills/placeholder/SKILL.md`. No hay mecanismo automático de sincronización; edits unilaterales generan drift.
+
 ## Licencia
 
 MIT — este estándar y su implementación de referencia son de dominio público para su adopción.
+
 
 

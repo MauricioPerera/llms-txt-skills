@@ -52,7 +52,10 @@ def resolve_skill_path(skill_url: str, source: str) -> str:
 
 
 def parse_yaml_frontmatter(text: str) -> dict[str, Any] | None:
-    """Extrae YAML frontmatter de un SKILL.md."""
+    """Extrae YAML frontmatter de un SKILL.md.
+    Maneja key: value plano con valores que contienen dos puntos.
+    No soporta listas, objetos anidados, ni multi-line strings (|, >).
+    """
     if not text.startswith("---"):
         return None
     parts = text.split("---", 2)
@@ -61,12 +64,10 @@ def parse_yaml_frontmatter(text: str) -> dict[str, Any] | None:
     raw = parts[1].strip()
     result: dict[str, Any] = {}
     for line in raw.splitlines():
-        if ":" not in line:
-            continue
-        key, val = line.split(":", 1)
-        result[key.strip()] = val.strip()
+        m = re.match(r"^([a-zA-Z_][a-zA-Z0-9_-]*)\s*:\s*(.*)$", line)
+        if m:
+            result[m.group(1)] = m.group(2).strip()
     return result
-
 
 def validate_llms_txt(source: str, text: str) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
     """Valida llms.txt y retorna (errores, warnings)."""

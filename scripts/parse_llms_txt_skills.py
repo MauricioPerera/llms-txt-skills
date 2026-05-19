@@ -108,7 +108,7 @@ def _parse_skill_item(raw: str) -> dict[str, Any] | None:
     # Patron: - [title](url): description <!-- skill: {...} -->
     # Mas permisivo con whitespace y multiline
     pattern = re.compile(
-        r"^-\s*\[([^\]]+)\]\s*\(([^)]+)\)\s*:\s*(.+?)(?:\s*<!--\s*skill:\s*(\{.*?\})\s*-->)?$",
+        r"^-\s*\[([^\]]+)\]\s*\(((?:[^()]|\([^)]*\))*)\)\s*:\s*(.+?)(?:\s*<!--\s*skill:\s*(\{.*?\})\s*-->)?$",
         re.DOTALL | re.IGNORECASE,
     )
 
@@ -190,3 +190,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
