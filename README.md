@@ -1,42 +1,41 @@
 # llms.txt Skills Specification
 
-> Draft v0.2 — Especificación para publicar Agent Skills a través de `llms.txt`.
+> Draft v0.3 — Especificación para publicar y consumir Agent Skills a través de `llms.txt`.
 
 ---
 
 ## TL;DR — ¿Qué es esto?
 
-Una propuesta para que cualquier sitio web pueda **anunciar skills descargables** para agentes de IA, simplemente añadiendo una sección `## Skills` a su archivo `llms.txt`. No requiere servidor, proceso persistente, ni autenticación. Solo archivos estáticos.
+Un estándar de dos caras:
+
+1. **Publisher**: cualquier sitio web puede anunciar skills descargables añadiendo una sección `## Skills` a su `llms.txt`. No requiere servidor, proceso persistente, ni autenticación.
+2. **Consumer**: cualquier agente puede descubrir esas skills automáticamente consultando `/llms.txt` antes de interactuar con un dominio. Una skill de referencia (`llms-txt-aware`) documenta exactamente cómo hacerlo.
 
 ---
 
-## El problema
+## El problema dual
+
+### Para los publishers
 
 Hoy, si eres desarrollador de un sitio web y quieres que los agentes de IA sepan cómo interactuar contigo, tus opciones son:
 
-### Opción A: MCP (Model Context Protocol)
+- **MCP**: necesitas un servidor persistente. Excesivo para un blog en GitHub Pages o una API REST simple.
+- **`/.well-known/skills/`**: solo permite una skill por dominio.
+- **Nada**: el agente lee `llms.txt` pero no sabe que existe una skill.
 
-Necesitas correr un proceso persistente (un servidor MCP) con transporte (stdio, SSE, HTTP), autenticación, y mantenimiento. Esto es correcto para integraciones complejas y stateful, pero excesivo para:
+### Para los consumers (agentes)
 
-- Un blog en GitHub Pages que quiere enseñar al agente cómo citar sus artículos.
-- Una API REST que solo quiere que el agente sepa qué endpoints llamar.
-- Un sitio estático en Cloudflare Pages que genera imágenes placeholder.
+Hoy, cuando un usuario dice "usa https://img.automators.work/", el agente:
+- No busca automáticamente `/llms.txt`.
+- No descubre que el sitio publica una skill `placeholder`.
+- No sabe que podría delegar la tarea al servicio remoto.
+- En su lugar, crea una imagen local con Python/PIL, ignorando la URL por completo.
 
-### Opción B: `/.well-known/skills/`
-
-La convención propuesta por Cloudflare/Mintlify funciona para sitios con **una sola skill**. Pero no permite:
-
-- Anunciar múltiples skills (ej: una para lectura, otra para escritura autenticada).
-- Descubrimiento co-ubicado: el agente debe hacer un segundo request a un path conocido.
-- Contexto: no hay descripción de cuándo usar cada skill.
-
-### Opción C: Nada
-
-El agente lee `llms.txt`, entiende qué es tu sitio, pero **no sabe que existe una skill** para trabajar contigo. El usuario tiene que descubrirla por su cuenta.
+Este es el **execution gap**: el sitio publica la skill, pero el runtime no la consume.
 
 ---
 
-## La solución
+## La solución (lado publisher)
 
 Añadir una sección `## Skills` dentro de `llms.txt`. Una sola línea de markdown por skill:
 
@@ -46,35 +45,63 @@ Añadir una sección `## Skills` dentro de `llms.txt`. Una sola línea de markdo
 - [placeholder](/skills/placeholder/SKILL.md): generate SVG placeholder image URLs for UI mockups. <!-- skill: {"version":"1.0.0","license":"MIT"} -->
 ```
 
-Eso es todo. El agente que ya leyó `llms.txt` ahora sabe que existe una skill, dónde encontrarla, y si confiar en ella (vía metadatos inline).
+El agente que ya leyó `llms.txt` ahora sabe que existe una skill, dónde encontrarla, y si confiar en ella.
 
 ---
 
-## ¿Por qué usar esto?
+## La solución (lado consumer)
 
-### Para los que publican sitios (developers)
+Antes de interactuar con cualquier dominio, el agente debe ejecutar este flujo:
+
+```
+1. Extraer el origen de la URL mencionada
+2. HEAD /llms.txt (o leer Link header de una request previa)
+3. Si 200 OK: leer el archivo COMPLETO (no solo ## Skills)
+4. Aplicar constraints, endpoints, parámetros y ejemplos canónicos
+5. Si existe ## Skills: listarlas al usuario y pedir opt-in
+6. Si el usuario aprueba: descargar SKILL.md y seguir sus instrucciones exactas
+7. Cachear por sesión
+```
+
+Implementamos este flujo como skill de referencia: [`llms-txt-aware`](skills/llms-txt-aware/SKILL.md).
+
+### ¿Por qué usar la skill `llms-txt-aware`?
+
+| Sin la skill | Con la skill |
+|---|---|
+| Usuario: "Crea imagen verde en img.automators.work" → agente crea PNG local con PIL | Usuario: "Crea imagen verde en img.automators.work" → agente busca `/llms.txt` → descubre skill `placeholder` → genera URL correcta `/600x50?bg=22c55e` |
+| Usuario: "Busca teclados en demoshop" → agente abre browser sin saber qué hacer | Usuario: "Busca teclados en demoshop" → agente busca `/llms.txt` → descubre `product-search` → sabe exactamente qué endpoint llamar |
+| Cada sitio requiere investigación manual | Un solo procedimiento cubre cualquier dominio |
+
+La skill no inventa protocolos: usa lo que el sitio publica. Si el sitio no tiene `llms.txt`, falla silenciosamente y sigue con herramientas locales.
+
+---
+
+## ¿Por qué usar este estándar?
+
+### Para publishers (developers)
 
 | Antes | Después |
 |---|---|
-| "Mi sitio tiene una API, pero los agentes no saben cómo usarla" | "Añadí 3 líneas a mi `llms.txt` y ahora cualquier agente compatible puede descubrir la skill" |
+| "Mi API existe pero los agentes no saben cómo usarla" | "Añadí 3 líneas a mi `llms.txt` y cualquier agente compatible puede descubrir la skill" |
 | "Necesito mantener un servidor MCP" | "No necesito nada, es un sitio estático" |
-| "La skill vive en un marketplace externo, se desincroniza" | "La skill vive en mi repo, se despliega con mi API" |
+| "La skill vive en un marketplace externo" | "La skill vive en mi repo, se despliega con mi API" |
 | "Solo puedo publicar una skill" | "Puedo publicar tantas como necesite" |
 
-### Para los agentes (runtimes)
+### Para consumers (agentes / runtimes)
 
 | Antes | Después |
 |---|---|
-| Leen `llms.txt` pero no encuentran skills | Leen `llms.txt` y descubren skills en el mismo documento |
-| Tienen que sondar `/.well-known/skills/` por separado | Un solo fetch descubre todo |
-| No saben qué versión de la skill usar | Metadatos inline indican versión, licencia, hash |
+| Cada sitio requiere código custom o prompting manual | Un solo procedimiento (`llms-txt-aware`) cubre cualquier dominio |
+| URLs en prompts se interpretan como decorativas | URLs en prompts disparan descubrimiento automático de skills |
+| No sabemos qué versión de la skill usar | Metadatos inline indican versión, licencia, hash |
 | Sin contexto de cuándo usar la skill | La descripción del item de lista lo dice |
 
 ### Para los usuarios
 
 | Antes | Después |
 |---|---|
-| "¿Cómo hago que el agente use esta API?" | El agente detecta automáticamente la skill disponible y te la sugiere |
+| "¿Cómo hago que el agente use esta API?" | El agente detecta automáticamente la skill disponible |
 | Instalar skills manualmente desde marketplaces | Skills descubiertas y validadas en el momento |
 
 ---
@@ -85,19 +112,26 @@ Eso es todo. El agente que ya leyó `llms.txt` ahora sabe que existe una skill, 
 |---|---|---|---|---|
 | Requiere servidor corriendo | Sí | Sí | **No** | **No** |
 | Funciona en sitios estáticos | No | No | **Sí** | **Sí** |
-| Múltiples skills por dominio | Sí | Sí | **No** (solo una) | **Sí** |
+| Múltiples skills por dominio | Sí | Sí | **No** | **Sí** |
 | Descubrimiento co-ubicado con `llms.txt` | No | No | No | **Sí** |
 | Sin infraestructura extra | No | No | Sí | **Sí** |
 | Complejidad de implementación | Alta | Alta | Baja | **Baja** |
-| Adecuado para | Integraciones complejas y stateful | Agent-to-agent communication | Sitios con una sola skill | **Cualquier sitio estático o API** |
+| Adecuado para | Integraciones complejas y stateful | Agent-to-agent | Sitios con una sola skill | **Cualquier sitio estático o API** |
 
-**Este estándar NO reemplaza MCP ni A2A.** Es la capa de descubrimiento para el caso simple: "mi sitio tiene una API, aquí está la skill para usarla".
+**Este estándar NO reemplaza MCP ni A2A.** Es la capa de descubrimiento para el caso simple.
 
 ---
 
 ## Implementación de referencia
 
-Este repo contiene una implementación viva del estándar. Puedes desplegarla en cualquier host estático.
+Este repo contiene:
+
+- **RFC v0.3**: especificación completa del protocolo
+- **Parser y validador**: herramientas de referencia en Python
+- **JSON Schema**: validación estructurada de la salida del parser
+- **Skills de ejemplo**: `placeholder` y `api-client` para `img.automators.work`
+- **Skill de consumo**: `llms-txt-aware` para que los agentes descubran skills automáticamente
+- **Tests manuales**: resultados contra 3 dominios reales
 
 ### Estructura del repo
 
@@ -107,30 +141,56 @@ llms-txt-skills/
 ├── README.md                         # Este archivo
 ├── .gitignore
 ├── docs/
-│   └── rfc-skills-in-llms-txt.md     # RFC completo (v0.2)
+│   └── rfc-skills-in-llms-txt.md     # RFC completo (v0.3)
 ├── scripts/
 │   ├── parse_llms_txt_skills.py      # Parser de referencia
 │   └── validate.py                   # Validador de llms.txt y skills
 ├── schema/
 │   └── llms-txt-skills.schema.json   # Schema JSON para validación
-├── .github/
-│   └── workflows/
-│       └── validate.yml              # CI: valida en cada push
+├── skills/
+│   ├── placeholder/SKILL.md            # Skill de ejemplo: generador de imágenes
+│   ├── api-client/SKILL.md             # Skill de ejemplo: cliente HTTP
+│   └── llms-txt-aware/SKILL.md         # Skill de consumo: descubre y usa skills
+├── tests/
+│   └── skill-test-results.md           # Resultados de pruebas manuales
 ├── .well-known/
-│   └── skills/
-│       ├── README.md
-│       └── default/
-│           └── SKILL.md              # Alias de compatibilidad well-known
-└── skills/
-    ├── placeholder/
-    │   └── SKILL.md                  # Skill de ejemplo: generador de imágenes
-    └── api-client/
-        └── SKILL.md                  # Skill de ejemplo: cliente HTTP
+│   └── skills/default/SKILL.md         # Alias de compatibilidad
+└── .github/workflows/
+    └── validate.yml                    # CI: valida en cada push
 ```
 
 ---
 
-## Cómo adoptar el estándar en 3 pasos
+## Cómo usar la skill `llms-txt-aware`
+
+### Como system prompt
+
+Copiá el contenido de [`skills/llms-txt-aware/SKILL.md`](skills/llms-txt-aware/SKILL.md) al system prompt de tu agente. La skill define un procedimiento de 6 pasos que el agente debe ejecutar antes de interactuar con cualquier dominio web.
+
+### Como skill local de Codex
+
+En Codex (OpenAI), las skills se cargan desde `~/.codex/skills/`. Copiá el directorio `llms-txt-aware/` ahí y activala en la sesión con `$llms-txt-aware`.
+
+### Como regla de Ollama / LM Studio
+
+Inyectá el contenido del SKILL.md como parte del system prompt del modelo. Funciona con cualquier modelo local que respete instrucciones de system prompt.
+
+### Como tool en un runtime custom
+
+Convertí los 6 pasos del procedimiento en una función:
+
+```python
+def discover_skills(domain: str) -> list[Skill]:
+    """Busca llms.txt en el dominio y devuelve skills disponibles."""
+    llms = fetch(f"{domain}/llms.txt")
+    return parse_skills_section(llms)
+```
+
+El RFC §5.1 documenta 4 mecanismos de descubrimiento (HTTP Link header, DNS TXT, HTML meta tag, convention probe).
+
+---
+
+## Cómo adoptar el estándar en tu dominio (3 pasos)
 
 ### Paso 1: Crea tu `llms.txt`
 
@@ -146,19 +206,6 @@ llms-txt-skills/
 ## Skills
 
 - [mi-skill](/skills/mi-skill/SKILL.md): descripción de cuándo usar esta skill. <!-- skill: {"version":"1.0.0","license":"MIT"} -->
-```
-
-
-**Opcional — verificación de integridad:** agrega `sha256` al metadata inline:
-
-```markdown
-- [mi-skill](/skills/mi-skill/SKILL.md): descripción de cuándo usar esta skill. <!-- skill: {"version":"1.0.0","license":"MIT","sha256":"f427124e22c7bfc3d45271081e2d5eff3b1f9d740f9685748f9d4abd99dd03df"} -->
-```
-
-Para generar el hash de tu `SKILL.md`:
-
-```bash
-sha256sum skills/mi-skill/SKILL.md
 ```
 
 ### Paso 2: Crea tu `SKILL.md`
@@ -179,102 +226,7 @@ Instrucciones detalladas para el agente.
 
 ### Paso 3: Despliega
 
-Sube ambos archivos a cualquier host estático (GitHub Pages, Cloudflare Pages, Netlify, Vercel, S3, etc.). No necesitas servidor, proceso persistente, ni autenticación.
-
----
-
-## Reglas del estándar
-
-1. El heading de la sección debe ser exactamente `## Skills` (case-insensitive).
-2. Cada entrada sigue el formato de link estándar de `llms.txt`: `- [title](URL): description`.
-3. La URL debe resolver a:
-   - Un `SKILL.md` raw (`text/markdown`), o
-   - Un archivo `.zip` o `.tar.gz` que contenga `SKILL.md` en la raíz.
-4. La skill debe ser un Agent Skill válido (YAML frontmatter + cuerpo markdown).
-5. Preferentemente same-origin. Cross-origin requiere confirmación extra del usuario.
-6. Metadatos inline opcionales en HTML comment JSON.
-
----
-
-## Parser de referencia
-
-Incluimos [`scripts/parse_llms_txt_skills.py`](scripts/parse_llms_txt_skills.py), un parser de referencia en Python que:
-
-- Extrae la sección `## Skills` de cualquier `llms.txt` (URL o archivo local).
-- Parsea títulos, URLs, descripciones y metadatos inline.
-- Resuelve URLs relativas a absolutas.
-- Devuelve JSON estructurado.
-
-### Uso
-
-```bash
-# Desde URL
-python scripts/parse_llms_txt_skills.py https://img.automators.work/llms.txt --resolve
-
-# Desde archivo local
-python scripts/parse_llms_txt_skills.py ./llms.txt --resolve
-```
-
-### Salida de ejemplo
-
-```json
-{
-  "source": "./llms.txt",
-  "skills": [
-    {
-      "title": "placeholder",
-      "url": "https://img.automators.work/skills/placeholder/SKILL.md",
-      "description": "generate SVG placeholder image URLs for UI mockups via this API.",
-      "metadata": {
-        "version": "1.0.0",
-        "license": "MIT"
-      }
-    }
-  ],
-  "count": 1
-}
-```
-
----
-
-## Validador
-Incluimos [`scripts/validate.py`](scripts/validate.py), un validador de referencia que verifica un **subset de la spec de Agent Skills** (no la spec completa de `agentskills.io`, que está fuera del alcance de este RFC). Valida:
-
-- Que `llms.txt` tenga una sección `## Skills` bien formada.
-- Que cada skill referenciada exista y tenga YAML frontmatter válido.
-- Que los metadatos inline sean JSON válido.
-- Que los archivos de skill locales existan y resuelvan correctamente. (Para URLs remotas, la verificación de contenido y dominio es responsabilidad del agente runtime).
-
-```bash
-python scripts/validate.py ./llms.txt
-```
-
----
-
-## Flujo de descubrimiento
-
-```
-1. Agente encuentra el dominio (URL o instrucción del usuario)
-2. Busca https://dominio/llms.txt
-3. Parsea la sección ## Skills
-4. Muestra skills disponibles al usuario
-5. El usuario aprueba explícitamente
-6. Agente descarga SKILL.md (verifica sha256 si existe)
-7. Carga y cachea según HTTP cache semantics
-```
-
-**Paso 5 obligatorio:** los agentes NO deben auto-instalar skills sin aprobación explícita del usuario.
-
----
-
-## Compatibilidad con `.well-known/skills/`
-
-Este repo también implementa la convención `/.well-known/skills/default/SKILL.md` propuesta por Cloudflare/Mintlify como alias de compatibilidad.
-
-- Si tu dominio tiene **una sola skill**, implementa ambas convenciones.
-- Si tu dominio tiene **múltiples skills**, `llms.txt` con `## Skills` es la única opción estándar.
-
-Ver [`.well-known/skills/README.md`](.well-known/skills/README.md) para más detalles.
+Sube ambos archivos a cualquier host estático. No necesitas servidor, proceso persistente, ni autenticación.
 
 ---
 
@@ -305,24 +257,19 @@ https://api.ejemplo.com/llms.txt      →  descubre "api-read" y "api-write"
 
 ```
 https://demoshop-88e.pages.dev/llms.txt  →  descubre 3 skills:
-                                              - product-search (buscar productos)
-                                              - cart-add (agregar al carrito)
-                                              - checkout-complete (finalizar compra)
-                                          →  el agente busca, agrega y compra sin auth
+                                              - product-search
+                                              - cart-add
+                                              - checkout-complete
+                                          →  el agente busca, agrega y compra
 ```
 
-Ver el flujo completo documentado en la sección [DemoShop](#demoshop--flujo-completo-probado) más abajo.
-
-
----
-
-
+Ver el flujo completo documentado en la sección [DemoShop](#demoshop--flujo-completo-probado).
 
 ---
 
 ## DemoShop — flujo completo probado
 
-[DemoShop](https://demoshop-88e.pages.dev) es una tienda demo desplegada en Cloudflare Pages que implementa el estándar `## Skills` con 3 skills funcionales. Es un caso de uso real del **Pattern A — API wrapping** del RFC: el sitio tiene una API HTTP pública y publica skills para que los agentes sepan cómo consumirla.
+[DemoShop](https://demoshop-88e.pages.dev) es una tienda demo desplegada en Cloudflare Pages que implementa el estándar `## Skills` con 3 skills funcionales. Es un caso de uso real del **Pattern A — API wrapping** del RFC.
 
 ### Skills publicadas
 
@@ -333,8 +280,6 @@ Ver el flujo completo documentado en la sección [DemoShop](#demoshop--flujo-com
 | [checkout-complete](https://demoshop-88e.pages.dev/skills/checkout-complete/SKILL.md) | Completar un pedido con datos del cliente | `POST /api/checkout` |
 
 ### Flujo simulado de compra
-
-Un agente que lea `llms.txt` puede ejecutar este flujo completo sin intervención humana (salvo el opt-in obligatorio de las skills):
 
 ```
 PASO 1: Descubrimiento
@@ -358,9 +303,7 @@ PASO 4: Checkout
   → {"success": true, "order_id": "ORD-MPCWLKHZ", "status": "confirmado"}
 ```
 
-### Código fuente
-
-El proyecto completo está en un repo separado. Estructura:
+### Código fuente del demo
 
 ```
 llms-shop-demo/
@@ -381,26 +324,27 @@ llms-shop-demo/
 ### Lecciones del demo
 
 - **Sin autenticación:** el flujo completo funciona stateless, sin sesiones ni tokens.
-- **Skills atómicas:** cada operación (buscar, agregar, comprar) tiene su propia skill. El agente puede usarlas individualmente o en secuencia.
-- **Sin servidor MCP:** todo corre como archivos estáticos + functions serverless en Cloudflare Pages.
+- **Skills atómicas:** cada operación tiene su propia skill. El agente puede usarlas individualmente o en secuencia.
+- **Sin servidor MCP:** todo corre como archivos estáticos + functions serverless.
+
+---
 
 ## Limitaciones conocidas
 
-El parser y validador de este repo son **herramientas de referencia**, no producción lista. Estos son los límites documentados:
+El parser y validador de este repo son **herramientas de referencia**, no producción lista.
 
-1. **Parser YAML frontmatter (validate.py):** maneja solo pares `key: value` planos. No soporta listas, objetos anidados, ni multi-line strings (`|`, `>`). Skills con frontmatter complejo pueden pasar validación incorrecta o fallar injustamente.
+1. **Parser YAML frontmatter:** maneja solo pares `key: value` planos. No soporta listas, objetos anidados, ni multi-line strings (`|`, `>`).
 
-2. **Regex de URLs:** soporta un nivel de paréntesis balanceados, pero no múltiples niveles ni caracteres de escape complejos en la URL del link markdown.
+2. **Regex de URLs:** soporta un nivel de paréntesis balanceados, pero no múltiples niveles.
 
-3. **Sub-headings dentro de `## Skills`:** un heading de nivel 3 (`### ...`) dentro de la sección se adjunta a la descripción del item anterior en lugar de terminar la sección. El RFC asume una lista plana.
+3. **Sub-headings dentro de `## Skills`:** un heading `### ...` dentro de la sección se adjunta a la descripción del item anterior. El RFC asume una lista plana.
 
-4. **Verificación `sha256`:** para skills con paths locales, el validador compara el hash declarado contra el contenido del archivo (con normalización CRLF→LF). Para URLs remotas, la verificación de contenido sigue siendo responsabilidad del agente runtime.
+4. **Verificación `sha256`:** el validador compara hash contra contenido real para paths locales (con normalización CRLF→LF). Para URLs remotas, la verificación sigue siendo responsabilidad del agente runtime.
 
-5. **Sincronización `.well-known/skills/default/SKILL.md`:** es una copia manual de `skills/placeholder/SKILL.md`. No hay mecanismo automático de sincronización; edits unilaterales generan drift.
+5. **Sincronización `.well-known/skills/default/SKILL.md`:** es una copia manual de `skills/placeholder/SKILL.md`. No hay mecanismo automático de sincronización.
+
+---
 
 ## Licencia
 
 MIT — este estándar y su implementación de referencia son de dominio público para su adopción.
-
-
-
