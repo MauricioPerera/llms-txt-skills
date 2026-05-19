@@ -48,6 +48,7 @@ All successful responses: `Cache-Control: public, max-age=31536000, immutable`.
 Remote Agent Skills published by this domain. See the RFC at `/docs/rfc-skills-in-llms-txt.md` for the proposed format.
 
 - [placeholder](/skills/placeholder/SKILL.md): generate SVG placeholder image URLs for UI mockups via this API. <!-- skill: {"version":"1.0.0","license":"MIT","sha256":"f427124e22c7bfc3d45271081e2d5eff3b1f9d740f9685748f9d4abd99dd03df"} -->
-- [api-client](/skills/api-client/SKILL.md): patterns for consuming the placeholder image API via HTTP. <!-- skill: {"version":"1.0.0","license":"MIT","sha256":"f427124e22c7bfc3d45271081e2d5eff3b1f9d740f9685748f9d4abd99dd03df"} -->
+- [api-client](/skills/api-client/SKILL.md): patterns for consuming the placeholder image API via HTTP. <!-- skill: {"version":"1.0.0","license":"MIT","sha256":"2a2493a78e2f315de4f0220311392282a67da765815d8041cd73d4f20a23012d"} -->
+
 
 

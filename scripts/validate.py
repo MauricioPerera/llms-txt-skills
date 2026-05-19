@@ -14,6 +14,7 @@ Uso:
 import argparse
 import json
 import os
+import hashlib
 import re
 import sys
 import urllib.parse
@@ -152,6 +153,19 @@ def validate_llms_txt(source: str, text: str) -> tuple[list[dict[str, str]], lis
             else:
                 # 5. Validar YAML frontmatter
                 skill_text = skill_path.read_text(encoding="utf-8")
+
+                # 4b. Verificar sha256 si fue declarado
+                if meta_raw:
+                    try:
+                        meta_inline = json.loads(meta_raw)
+                        declared_hash = meta_inline.get("sha256")
+                        if declared_hash:
+                            actual_hash = hashlib.sha256(skill_path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+                            if actual_hash != declared_hash:
+                                errors.append({"file": source, "line": raw[:80], "message": f"SHA-256 mismatch: declarado {declared_hash}, actual {actual_hash}"})
+                    except json.JSONDecodeError:
+                        pass  # ya reportado arriba
+
                 fm = parse_yaml_frontmatter(skill_text)
                 if not fm:
                     errors.append({"file": resolved, "line": "", "message": "Skill sin YAML frontmatter valido"})
