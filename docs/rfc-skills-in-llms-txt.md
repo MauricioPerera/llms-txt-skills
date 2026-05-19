@@ -253,6 +253,32 @@ The skill was treated as "interesting documentation" rather than as a "behaviora
 - The RFC defines *what* to publish and *where* to find it, but not *how* the runtime must enforce execution.
 - This is intentionally out of scope (Section 7), but it is a real, observable gap that future work should address.
 
+### 5.4 Discovery from User Instructions
+
+A related but distinct gap occurs when the user includes a domain in their prompt, but the agent does not associate that URL with the need to discover skills.
+
+**Empirical evidence from img.automators.work:** A user asked:
+
+> "crea una imagen de 600 x 50 px de color verde https://img.automators.work/"
+
+The agent:
+1. Did not fetch `https://img.automators.work/llms.txt`.
+2. Did not discover the `placeholder` skill.
+3. Did not learn that the site generates SVG placeholder images via `/600x50?bg=22c55e`.
+4. Instead, created a local PNG with Python/PIL, ignoring the URL entirely.
+
+**Why this happens:**
+- The agent interpreted the URL as a decorative reference, not as a service endpoint.
+- The runtime has no rule that says: "when a user mentions a domain, check `/llms.txt` before acting."
+- The default behavior is "do what the user asked with local tools" rather than "delegate to the domain's published skills."
+
+**Implications:**
+- Skill discovery is not triggered by implicit references in user prompts.
+- Even Mechanism D (the `/llms.txt` convention probe) only works if the agent is already navigating the domain, not when the domain is merely mentioned in text.
+- This suggests that either:
+  - Agents need a pre-action step: "before answering any task involving a domain, probe its `llms.txt`", or
+  - User instructions need an explicit signal (e.g., "use the skill at...") to trigger discovery.
+
 ---
 
 ## 6. Why This Is Worth Doing---
