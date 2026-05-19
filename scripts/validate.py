@@ -136,10 +136,10 @@ def validate_llms_txt(source: str, text: str) -> tuple[list[dict[str, str]], lis
         # 3. Validar metadata inline
         if meta_raw:
             try:
-                meta = json.loads(meta_raw)
-                if "version" in meta and not re.match(r"^\d+\.\d+\.\d+$", str(meta["version"])):
-                    warnings.append({"file": source, "line": raw[:80], "message": f"Version semantica invalida: {meta['version']}"})
-                if "sha256" in meta and not re.match(r"^[a-fA-F0-9]{64}$", str(meta["sha256"])):
+                meta_parsed = json.loads(meta_raw)
+                if "version" in meta_parsed and not re.match(r"^\d+\.\d+\.\d+$", str(meta_parsed["version"])):
+                    warnings.append({"file": source, "line": raw[:80], "message": f"Version semantica invalida: {meta_parsed['version']}"})
+                if "sha256" in meta_parsed and not re.match(r"^[a-fA-F0-9]{64}$", str(meta_parsed["sha256"])):
                     errors.append({"file": source, "line": raw[:80], "message": "SHA-256 invalido (debe ser 64 hex chars)"})
             except json.JSONDecodeError as e:
                 errors.append({"file": source, "line": raw[:80], "message": f"Metadata JSON invalido: {e}"})
@@ -155,17 +155,12 @@ def validate_llms_txt(source: str, text: str) -> tuple[list[dict[str, str]], lis
                 skill_text = skill_path.read_text(encoding="utf-8")
 
                 # 4b. Verificar sha256 si fue declarado
-                if meta_raw:
-                    try:
-                        meta_inline = json.loads(meta_raw)
-                        declared_hash = meta_inline.get("sha256")
-                        if declared_hash:
-                            actual_hash = hashlib.sha256(skill_path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
-                            if actual_hash != declared_hash:
-                                errors.append({"file": source, "line": raw[:80], "message": f"SHA-256 mismatch: declarado {declared_hash}, actual {actual_hash}"})
-                    except json.JSONDecodeError:
-                        pass  # ya reportado arriba
-
+                if meta_parsed:
+                    declared_hash = meta_parsed.get("sha256")
+                    if declared_hash:
+                        actual_hash = hashlib.sha256(skill_path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+                        if actual_hash != declared_hash:
+                            errors.append({"file": source, "line": raw[:80], "message": f"SHA-256 mismatch: declarado {declared_hash}, actual {actual_hash}"})
                 fm = parse_yaml_frontmatter(skill_text)
                 if not fm:
                     errors.append({"file": resolved, "line": "", "message": "Skill sin YAML frontmatter valido"})
@@ -229,3 +224,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+

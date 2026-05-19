@@ -315,7 +315,7 @@ El parser y validador de este repo son **herramientas de referencia**, no produc
 
 3. **Sub-headings dentro de `## Skills`:** un heading de nivel 3 (`### ...`) dentro de la sección se adjunta a la descripción del item anterior en lugar de terminar la sección. El RFC asume una lista plana.
 
-4. **Verificación `sha256`:** el validador valida formato (64 hex chars) pero no compara el hash contra el contenido real del archivo. Esa verificación es responsabilidad del agente runtime.
+4. **Verificación `sha256`:** para skills con paths locales, el validador compara el hash declarado contra el contenido del archivo (con normalización CRLF→LF). Para URLs remotas, la verificación de contenido sigue siendo responsabilidad del agente runtime.
 
 5. **Sincronización `.well-known/skills/default/SKILL.md`:** es una copia manual de `skills/placeholder/SKILL.md`. No hay mecanismo automático de sincronización; edits unilaterales generan drift.
 
