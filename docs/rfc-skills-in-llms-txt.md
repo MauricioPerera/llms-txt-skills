@@ -1,6 +1,6 @@
 # RFC: Publishing Agent Skills through `llms.txt`
 
-- **Status:** Draft (v0.3)
+- **Status:** Draft (v0.4)
 - **Date:** 2026-05-19
 - **Author:** automators.work
 - **Depends on:** [llmstxt.org](https://llmstxt.org/) spec, [Agent Skills](https://agentskills.io) (`SKILL.md`)
@@ -53,6 +53,21 @@ It fails when:
 
 **Co-location matters.** An agent that reads `llms.txt` to understand a site already has the right document open. If skill discovery requires a separate probe, that is extra latency and a second source of truth.
 
+### 1.4 Why structured over prose
+
+`llms.txt` is free-form markdown. A site could write skill discovery as prose:
+
+> "To use this API from an agent, load the skill at /skills/api-client/SKILL.md."
+
+This works for an LLM reading the document. It does not work for:
+
+- **LLM-free parsing.** A regex parser can extract `## Skills` entries without invoking a model. Prose requires inference to normalize ("here's a skill:", "you can use:", "for API access:") — every site phrases it differently.
+- **Non-LLM tooling.** Validators, CI linters, skill crawlers, and IDE integrations need a fixed schema to function. Prose is unparseable without a model in the loop.
+- **Runtime auto-discovery.** An agent runtime can implement native `## Skills` support with a deterministic code path. With prose, the runtime needs per-site prompt engineering to extract the same signal.
+- **Cross-domain indexing.** A skills directory can index published skills across all domains by crawling `## Skills` sections. This is not possible with ad-hoc prose.
+
+The structure adds zero friction for publishers (two lines of markdown) and enables the tooling layer above it.
+
 ---
 
 ## 2. Proposal
@@ -81,13 +96,15 @@ Rules:
 
 ### 2.2 Optional inline metadata
 
-A skill entry MAY carry a trailing HTML comment with a JSON object for richer discovery:
+A skill entry MAY carry a version hint as a trailing HTML comment:
 
 ```markdown
-- [pay-with-x402](/skills/x402/SKILL.md): make x402 payments. <!-- skill: {"version":"1.2.0","sha256":"abc123…","license":"MIT"} -->
+- [pay-with-x402](/skills/x402/SKILL.md): make x402 payments. <!-- skill: {"version":"1.2.0"} -->
 ```
 
-Recognized keys: `version`, `sha256`, `requires`, `license`, `homepage`. Agents that do not understand the comment MUST ignore it.
+The only recognized key is `version`. It is a human-readable hint for quick identification, not a security mechanism. Agents that do not understand the comment MUST ignore it.
+
+**For integrity verification and full metadata** (sha256, license, cost estimates, requirements), agents SHOULD fetch `/.well-known/agent-skills/index.json` if available. That document is the canonical metadata source. The `## Skills` entry is the discovery pointer; `.well-known` is the verification and metadata layer.
 
 ### 2.3 Discovery flow
 
@@ -281,8 +298,6 @@ The agent:
 
 ---
 
-## 6. Why This Is Worth Doing---
-
 ## 6. Why This Is Worth Doing
 
 - **Deployable on any static host.** A Cloudflare Pages site, a GitHub Pages repo, a Netlify deploy — any host that can serve a text file can publish skills through this mechanism. No server process required.
@@ -309,7 +324,15 @@ The agent:
 2. **Cross-origin skill trust model.** Should cross-origin skills be disallowed entirely, allowed with elevated confirmation, or allowed freely? Current proposal: allowed with elevated confirmation (§4.4).
 3. **Archive format.** Should `.zip` be the only mandated archive format, or should `.tar.gz` remain in scope? `.zip` is more universally supported; `.tar.gz` is more natural for git-hosted skill bundles.
 4. **Signature scheme beyond `sha256`.** Is content hashing sufficient, or is a signing scheme (sigstore, Web Bot Auth) necessary for high-trust deployments?
-5. **Relationship to `/.well-known/skills/`.** Should this RFC explicitly recommend that sites serve both — a `## Skills` section in `llms.txt` *and* the `.well-known` convention — for maximum compatibility?
+5. **Relationship to `/.well-known/skills/`.** Resolved: sites SHOULD serve both. The two mechanisms have distinct, non-overlapping roles:
+
+   | Layer | Mechanism | Role |
+   |---|---|---|
+   | Discovery | `## Skills` in `llms.txt` | Passive, co-located with domain context; zero extra fetch |
+   | Metadata & verification | `.well-known/agent-skills/index.json` | sha256, version, license, cost estimates |
+   | Active install | `.well-known/skills/default/skill.md` | Single-skill convention probe |
+
+   URLs in `## Skills` MAY mirror those already declared in `.well-known/agent-skills/index.json`, reusing the same artifacts without duplication. Agents that support both get redundant coverage at zero extra cost for publishers.
 
 ---
 
@@ -328,6 +351,7 @@ The agent:
 
 ## 10. Changelog
 
+- **v0.4 (2026-05-19):** Added §1.4 "Why structured over prose" addressing the free-form equivalence objection; simplified §2.2 inline metadata to version-only hint, delegating sha256/license/cost to `.well-known/agent-skills/index.json`; resolved Open Question 5 with explicit layer table for `## Skills` vs `.well-known`; fixed duplicate §6 heading.
 - **v0.3 (2026-05-19):** Expanded agent-side discovery triggers with four mechanisms (HTTP Link header, DNS TXT, HTML meta tag, convention probe); added recommended agent behavior flow; added cache strategy; updated examples with DemoShop.
 - **v0.2 (2026-04-21):** Added §3 ecosystem comparison; expanded §4 with cross-origin security rule; added §5 on discovery triggers; added §1.2 infrastructure barrier argument; refined two use-case patterns in §2.4; updated open questions.
 - **v0.1 (2026-04-20):** Initial draft.
