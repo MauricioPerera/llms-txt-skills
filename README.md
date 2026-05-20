@@ -1,6 +1,6 @@
 # llms.txt Skills Specification
 
-> Draft v0.3 — Especificación para publicar y consumir Agent Skills a través de `llms.txt`.
+> Draft v0.4 — Especificación para publicar y consumir Agent Skills a través de `llms.txt`.
 
 ---
 
@@ -42,10 +42,10 @@ Añadir una sección `## Skills` dentro de `llms.txt`. Una sola línea de markdo
 ```markdown
 ## Skills
 
-- [placeholder](/skills/placeholder/SKILL.md): generate SVG placeholder image URLs for UI mockups. <!-- skill: {"version":"1.0.0","license":"MIT"} -->
+- [placeholder](/skills/placeholder/SKILL.md): generate SVG placeholder image URLs for UI mockups. <!-- skill: {"version":"1.0.0"} -->
 ```
 
-El agente que ya leyó `llms.txt` ahora sabe que existe una skill, dónde encontrarla, y si confiar en ella.
+El agente que ya leyó `llms.txt` ahora sabe que existe una skill y dónde encontrarla. El metadata inline solo lleva `version` como hint rápido. Para verificación de integridad (sha256) y metadata completa (licencia, costo), el agente consulta `/.well-known/agent-skills/index.json` si está disponible.
 
 ---
 
@@ -94,7 +94,7 @@ La skill no inventa protocolos: usa lo que el sitio publica. Si el sitio no tien
 |---|---|
 | Cada sitio requiere código custom o prompting manual | Un solo procedimiento (`llms-txt-aware`) cubre cualquier dominio |
 | URLs en prompts se interpretan como decorativas | URLs en prompts disparan descubrimiento automático de skills |
-| No sabemos qué versión de la skill usar | Metadatos inline indican versión, licencia, hash |
+| No sabemos qué versión de la skill usar | Metadatos inline indican versión; sha256 y licencia en `.well-known` |
 | Sin contexto de cuándo usar la skill | La descripción del item de lista lo dice |
 
 ### Para los usuarios
@@ -116,9 +116,10 @@ La skill no inventa protocolos: usa lo que el sitio publica. Si el sitio no tien
 | Descubrimiento co-ubicado con `llms.txt` | No | No | No | **Sí** |
 | Sin infraestructura extra | No | No | Sí | **Sí** |
 | Complejidad de implementación | Alta | Alta | Baja | **Baja** |
+| Metadata e integridad (sha256, licencia) | N/A | N/A | No | Vía `.well-known/agent-skills/index.json` |
 | Adecuado para | Integraciones complejas y stateful | Agent-to-agent | Sitios con una sola skill | **Cualquier sitio estático o API** |
 
-**Este estándar NO reemplaza MCP ni A2A.** Es la capa de descubrimiento para el caso simple.
+**Este estándar NO reemplaza MCP ni A2A.** Es la capa de descubrimiento para el caso simple. Para metadata e integridad, se complementa con `/.well-known/agent-skills/index.json`: `## Skills` es el puntero de descubrimiento, `.well-known` es la fuente de verdad de metadatos.
 
 ---
 
@@ -126,7 +127,7 @@ La skill no inventa protocolos: usa lo que el sitio publica. Si el sitio no tien
 
 Este repo contiene:
 
-- **RFC v0.3**: especificación completa del protocolo
+- **RFC v0.4**: especificación completa del protocolo
 - **Parser y validador**: herramientas de referencia en Python
 - **JSON Schema**: validación estructurada de la salida del parser
 - **Skills de ejemplo**: `placeholder` y `api-client` para `img.automators.work`
@@ -141,7 +142,7 @@ llms-txt-skills/
 ├── README.md                         # Este archivo
 ├── .gitignore
 ├── docs/
-│   └── rfc-skills-in-llms-txt.md     # RFC completo (v0.3)
+│   └── rfc-skills-in-llms-txt.md     # RFC completo (v0.4)
 ├── scripts/
 │   ├── parse_llms_txt_skills.py      # Parser de referencia
 │   └── validate.py                   # Validador de llms.txt y skills
@@ -205,7 +206,7 @@ El RFC §5.1 documenta 4 mecanismos de descubrimiento (HTTP Link header, DNS TXT
 
 ## Skills
 
-- [mi-skill](/skills/mi-skill/SKILL.md): descripción de cuándo usar esta skill. <!-- skill: {"version":"1.0.0","license":"MIT"} -->
+- [mi-skill](/skills/mi-skill/SKILL.md): descripción de cuándo usar esta skill. <!-- skill: {"version":"1.0.0"} -->
 ```
 
 ### Paso 2: Crea tu `SKILL.md`
