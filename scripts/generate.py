@@ -10,6 +10,9 @@ SKILL.md publicado, regenera de forma determinista:
   1. La seccion `## Skills` de llms.txt (con version, license y sha256 inline).
   2. La copia de compatibilidad `.well-known/skills/default/SKILL.md`.
   3. El indice canonico `.well-known/agent-skills/index.json` (RFC v0.4 §2.2).
+  4. La copia del consumer skill dentro del plugin de Claude Code
+     (plugins/llms-txt-aware/skills/llms-txt-aware/SKILL.md), porque los
+     plugins se copian a cache y no pueden referenciar archivos externos.
 
 Esto elimina el trabajo manual y el drift entre fuentes: el sha256, la copia
 .well-known y el indice dejan de mantenerse a mano. El sha256 se calcula con
@@ -139,11 +142,21 @@ def build_targets(manifest: dict[str, Any], skills: list[dict[str, Any]]) -> lis
 
     new_index = render_index(skills)
 
-    return [
+    targets = [
         (LLMS_TXT_PATH, new_llms),
         (WELL_KNOWN_DEFAULT, new_default),
         (AGENT_SKILLS_INDEX, new_index),
     ]
+
+    # Sincronizar la copia del consumer skill dentro del plugin de Claude Code.
+    plugin = manifest.get("consumer_plugin")
+    if plugin:
+        src = REPO_ROOT / plugin["skill"]
+        if not src.exists():
+            raise FileNotFoundError(f"consumer_plugin.skill no encontrado: {plugin['skill']}")
+        targets.append((REPO_ROOT / plugin["dest"], src.read_text(encoding="utf-8")))
+
+    return targets
 
 
 def main() -> int:
