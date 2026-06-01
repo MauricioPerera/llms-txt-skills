@@ -1,7 +1,9 @@
 ---
 name: llms-txt-aware
 description: "Antes de fetchear, scrapear o llamar cualquier endpoint de un dominio web, buscá su archivo `/llms.txt` y, si existe, leelo COMPLETO (no solo la sección `## Skills`). Usalo como manual operativo del sitio: endpoints, parámetros, límites, ejemplos canónicos, notas para agentes y skills publicadas. Activá esta skill en cualquier `web_fetch`, llamada a API REST/GraphQL pública sin docs locales, scraping, o cuando vayas a construir una URL del sitio. No la actives para búsquedas web genéricas ni para recursos binarios."
+version: 1.0.0
 license: MIT
+homepage: https://github.com/MauricioPerera/llms-txt-skills
 ---
 
 # llms-txt-aware
@@ -73,7 +75,7 @@ Cuando el llms.txt contradice tu intuición, gana el llms.txt. Es el dueño del 
 
 ### Paso 5: manejar la sección `## Skills` si existe
 
-Formato esperado por entrada (RFC v0.2):
+Formato esperado por entrada (RFC v0.4):
 
 ```
 - [title](URL): description <!-- skill: {"version":"...","license":"...","sha256":"..."} -->
@@ -112,7 +114,7 @@ Markdown plano siguiendo el estándar de llmstxt.org. Estructura mínima:
 ## Otra sección
 ... más contenido ...
 
-## Skills (opcional, según RFC v0.2)
+## Skills (opcional, según RFC v0.4)
 - [skill-id](/skills/skill-id/SKILL.md): cuándo usar esta skill. <!-- skill: {"version":"1.0.0","license":"MIT"} -->
 ```
 
@@ -147,7 +149,7 @@ Si no existe, no hace falta anunciarlo. Seguí silenciosamente con el flujo norm
 
 ## Referencias
 
-- Spec llms.txt Skills (RFC v0.2): https://github.com/MauricioPerera/llms-txt-skills
+- Spec llms.txt Skills (RFC v0.4): https://github.com/MauricioPerera/llms-txt-skills
 - Estándar original llms.txt: https://llmstxt.org
 - Parser de referencia: `scripts/parse_llms_txt_skills.py` del repo de la spec.
 - Validador de referencia: `scripts/validate.py` del repo de la spec.
