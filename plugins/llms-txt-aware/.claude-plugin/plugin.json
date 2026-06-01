@@ -1,0 +1,13 @@
+{
+  "name": "llms-txt-aware",
+  "description": "Antes de tocar cualquier dominio web, busca su /llms.txt, lo lee completo como manual operativo y descubre las skills que publica (RFC ## Skills).",
+  "version": "1.0.0",
+  "author": {
+    "name": "Mauricio Perera",
+    "email": "mauricio.perera@gmail.com"
+  },
+  "homepage": "https://github.com/MauricioPerera/llms-txt-skills",
+  "repository": "https://github.com/MauricioPerera/llms-txt-skills",
+  "license": "MIT",
+  "keywords": ["llms-txt", "agent-skills", "discovery", "web", "rfc"]
+}

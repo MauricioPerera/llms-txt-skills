@@ -154,7 +154,11 @@ llms-txt-skills/
 ├── skills/
 │   ├── placeholder/SKILL.md            # Skill de ejemplo: generador de imágenes
 │   ├── api-client/SKILL.md             # Skill de ejemplo: cliente HTTP
-│   └── llms-txt-aware/SKILL.md         # Skill de consumo: descubre y usa skills
+│   └── llms-txt-aware/SKILL.md         # Skill de consumo (fuente canónica)
+├── .claude-plugin/
+│   └── marketplace.json                # Marketplace de Claude Code
+├── plugins/
+│   └── llms-txt-aware/                 # Plugin instalable (skill generado desde la fuente)
 ├── tests/
 │   └── skill-test-results.md           # Resultados de pruebas manuales
 ├── .well-known/
@@ -167,6 +171,17 @@ llms-txt-skills/
 ---
 
 ## Cómo usar la skill `llms-txt-aware`
+
+### Como plugin de Claude Code (recomendado)
+
+Este repo es además un marketplace de Claude Code. Instalá el consumer skill en dos comandos:
+
+```shell
+/plugin marketplace add MauricioPerera/llms-txt-skills
+/plugin install llms-txt-aware@llms-txt-skills
+```
+
+A partir de ahí, Claude Code activa la skill automáticamente cuando vayas a tocar un dominio web, según su `description`.
 
 ### Como system prompt
 
