@@ -129,6 +129,7 @@ Este repo contiene:
 
 - **RFC v0.4**: especificación completa del protocolo
 - **Parser y validador**: herramientas de referencia en Python
+- **Generador/sincronizador**: regenera `## Skills`, la copia `.well-known` y el índice canónico desde el frontmatter de cada skill
 - **JSON Schema**: validación estructurada de la salida del parser
 - **Skills de ejemplo**: `placeholder` y `api-client` para `img.automators.work`
 - **Skill de consumo**: `llms-txt-aware` para que los agentes descubran skills automáticamente
@@ -145,7 +146,9 @@ llms-txt-skills/
 │   └── rfc-skills-in-llms-txt.md     # RFC completo (v0.4)
 ├── scripts/
 │   ├── parse_llms_txt_skills.py      # Parser de referencia
-│   └── validate.py                   # Validador de llms.txt y skills
+│   ├── validate.py                   # Validador de llms.txt y skills
+│   ├── generate.py                   # Generador/sincronizador (--check para CI)
+│   └── skills-manifest.json          # Qué skills publica el dominio
 ├── schema/
 │   └── llms-txt-skills.schema.json   # Schema JSON para validación
 ├── skills/
@@ -155,9 +158,10 @@ llms-txt-skills/
 ├── tests/
 │   └── skill-test-results.md           # Resultados de pruebas manuales
 ├── .well-known/
-│   └── skills/default/SKILL.md         # Alias de compatibilidad
+│   ├── skills/default/SKILL.md         # Alias de compatibilidad (generado)
+│   └── agent-skills/index.json         # Índice canónico de metadata (generado)
 └── .github/workflows/
-    └── validate.yml                    # CI: valida en cada push
+    └── validate.yml                    # CI: valida + chequea sincronización
 ```
 
 ---
@@ -228,6 +232,17 @@ Instrucciones detalladas para el agente.
 ### Paso 3: Despliega
 
 Sube ambos archivos a cualquier host estático. No necesitas servidor, proceso persistente, ni autenticación.
+
+### Mantener todo sincronizado (recomendado)
+
+En vez de editar a mano la sección `## Skills`, calcular el `sha256` y copiar el `.well-known`, declará qué skills publica el dominio en `scripts/skills-manifest.json` y dejá que el generador haga el resto:
+
+```bash
+python scripts/generate.py          # regenera ## Skills, .well-known/skills/default y .well-known/agent-skills/index.json
+python scripts/generate.py --check  # falla si algo quedó desincronizado (lo usa CI)
+```
+
+El generador toma `name`, `description`, `version` y `license` del frontmatter de cada `SKILL.md`, calcula el `sha256` (CRLF→LF) y escribe las tres salidas de forma determinista. El step `--check` en CI garantiza que nunca haya drift entre el `SKILL.md` y lo publicado.
 
 ---
 
@@ -342,7 +357,7 @@ El parser y validador de este repo son **herramientas de referencia**, no produc
 
 4. **Verificación `sha256`:** el validador compara hash contra contenido real para paths locales (con normalización CRLF→LF). Para URLs remotas, la verificación sigue siendo responsabilidad del agente runtime.
 
-5. **Sincronización `.well-known/skills/default/SKILL.md`:** es una copia manual de `skills/placeholder/SKILL.md`. No hay mecanismo automático de sincronización.
+5. **Modelo de confianza:** el `sha256` inline lo asevera el mismo `llms.txt` que apunta a la skill, por lo que protege contra corrupción en tránsito pero no contra un publisher malicioso. Una firma criptográfica (sigstore, Web Bot Auth) queda como trabajo futuro (RFC Open Question 4).
 
 ---
 
