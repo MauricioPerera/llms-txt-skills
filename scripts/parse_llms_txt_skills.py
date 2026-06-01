@@ -3,7 +3,7 @@
 parse_llms_txt_skills.py
 
 Parser de referencia para extraer la seccion ## Skills de un archivo llms.txt.
-Cumple con el RFC v0.4 de img.automators.work.
+Cumple con el RFC v0.5 de img.automators.work.
 
 Uso:
     python parse_llms_txt_skills.py https://ejemplo.com/llms.txt

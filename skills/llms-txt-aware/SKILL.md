@@ -75,7 +75,7 @@ Cuando el llms.txt contradice tu intuición, gana el llms.txt. Es el dueño del 
 
 ### Paso 5: manejar la sección `## Skills` si existe
 
-Formato esperado por entrada (RFC v0.4):
+Formato esperado por entrada (RFC v0.5):
 
 ```
 - [title](URL): description <!-- skill: {"version":"...","license":"...","sha256":"..."} -->
@@ -86,9 +86,13 @@ Procedimiento:
 1. Listale al usuario las skills encontradas con título, descripción y versión.
 2. Pedile opt-in EXPLÍCITO antes de cargar cualquiera. Nunca auto-instales.
 3. Si el usuario aprueba una skill, hacé `GET` a su URL.
-4. Si el metadata inline trae `sha256`, calculá el hash del contenido descargado y compará. Si no coincide, descartá la skill y avisale al usuario.
-5. Una vez validada, cargá ese SKILL.md como contexto adicional para la tarea actual.
-6. Same-origin preferido. Si la URL de la skill apunta a otro dominio, pedí confirmación extra antes de cargarla.
+4. **Integridad (`sha256`)**: si el metadata inline o el `index.json` trae hash, calculá el hash del contenido descargado y compará. Si no coincide, descartá la skill y avisale al usuario.
+5. **Autenticidad (firma)**: si `/.well-known/agent-skills/index.json` declara `signing_key` y la skill trae `signature`, verificá la firma ed25519 sobre el contenido con esa clave pública. Si no valida, descartá la skill.
+6. **Key-pinning (TOFU)**: la primera vez que ves la `signing_key` de un origen, fijala. Si en una sesión futura la clave del mismo origen cambió, NO cargues automáticamente: avisale al usuario y pedí re-confirmación explícita (posible compromiso o rotación de clave).
+7. Una vez validada, cargá ese SKILL.md como contexto adicional para la tarea actual.
+8. Same-origin preferido. Si la URL de la skill apunta a otro dominio, pedí confirmación extra antes de cargarla.
+
+Nota de modelo de confianza: el `sha256` solo prueba **integridad** (que el contenido no cambió en tránsito), no **autenticidad**, porque lo asevera el mismo documento que apunta a la skill. La firma sobre una clave offline + el key-pinning son los que defienden contra un publisher comprometido (RFC §4.6).
 
 ### Paso 6: cache de sesión
 
@@ -114,7 +118,7 @@ Markdown plano siguiendo el estándar de llmstxt.org. Estructura mínima:
 ## Otra sección
 ... más contenido ...
 
-## Skills (opcional, según RFC v0.4)
+## Skills (opcional, según RFC v0.5)
 - [skill-id](/skills/skill-id/SKILL.md): cuándo usar esta skill. <!-- skill: {"version":"1.0.0","license":"MIT"} -->
 ```
 
@@ -124,7 +128,7 @@ El parser de referencia que respeta este formato está en `scripts/parse_llms_tx
 
 1. **Same-origin first**: skills y recursos referenciados deberían ser del mismo origen que el llms.txt. Cross-origin requiere confirmación extra del usuario.
 2. **No auto-instalar skills**: las skills publicadas siempre requieren opt-in explícito.
-3. **Verificar sha256 si está**: si el metadata inline trae hash, validá antes de cargar.
+3. **Verificar integridad y autenticidad**: validá `sha256` si está; si hay `signing_key` + `signature`, verificá la firma y aplicá key-pinning. No cargues una skill con firma inválida o con clave de origen cambiada sin re-confirmación.
 4. **Fail open**: si el llms.txt no existe, no carga, o está mal formado, seguí el flujo normal. La skill no debe bloquear la tarea.
 5. **El archivo completo es contexto**: nunca te limites a una sola sección.
 6. **Re-chequear al cambiar de origen**: si la tarea salta a otro dominio, repetir el flujo desde el paso 1 para ese nuevo origen.
@@ -149,7 +153,7 @@ Si no existe, no hace falta anunciarlo. Seguí silenciosamente con el flujo norm
 
 ## Referencias
 
-- Spec llms.txt Skills (RFC v0.4): https://github.com/MauricioPerera/llms-txt-skills
+- Spec llms.txt Skills (RFC v0.5): https://github.com/MauricioPerera/llms-txt-skills
 - Estándar original llms.txt: https://llmstxt.org
 - Parser de referencia: `scripts/parse_llms_txt_skills.py` del repo de la spec.
 - Validador de referencia: `scripts/validate.py` del repo de la spec.
