@@ -8,3 +8,8 @@ __pycache__/
 .idea/
 node_modules/
 *.log
+
+# Claves privadas de firma del publisher: NUNCA commitear (deben vivir offline).
+*.pem
+*-private-key*
+signing-key*.key

@@ -24,6 +24,7 @@ Uso:
 """
 
 import argparse
+import base64
 import hashlib
 import json
 import re
@@ -36,6 +37,7 @@ MANIFEST_PATH = REPO_ROOT / "scripts" / "skills-manifest.json"
 LLMS_TXT_PATH = REPO_ROOT / "llms.txt"
 WELL_KNOWN_DEFAULT = REPO_ROOT / ".well-known" / "skills" / "default" / "SKILL.md"
 AGENT_SKILLS_INDEX = REPO_ROOT / ".well-known" / "agent-skills" / "index.json"
+SIGNING_KEY_PUB = REPO_ROOT / ".well-known" / "agent-skills" / "signing-key.pub"
 
 REQUIRED_FRONTMATTER = ("name", "description", "version", "license")
 
@@ -111,7 +113,62 @@ def render_llms_txt(current: str, section: str) -> str:
     return "\n".join(out) + "\n\n" + section
 
 
-def render_index(skills: list[dict[str, Any]]) -> str:
+def load_signing_key(manifest: dict[str, Any]):
+    """
+    Devuelve la clave privada ed25519 a usar para firmar, o None si no hay firma.
+
+    Soporta dos modos en manifest["signing"]:
+    - {"private_key_path": "..."}: clave real del publisher. NUNCA se commitea;
+      vive offline / fuera del servidor. Es el modo de produccion.
+    - {"demo_seed": "..."}: deriva una clave determinista desde un seed publico,
+      solo para que el ejemplo del repo sea reproducible. NO usar en produccion.
+    """
+    signing = manifest.get("signing")
+    if not signing:
+        return None
+
+    try:
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    except ImportError as e:
+        raise SystemExit(
+            "El manifest declara 'signing' pero falta la dependencia 'cryptography'.\n"
+            "Instalala con: pip install cryptography"
+        ) from e
+
+    path = signing.get("private_key_path")
+    if path:
+        pem = (REPO_ROOT / path).read_bytes()
+        return serialization.load_pem_private_key(pem, password=None)
+
+    seed = signing.get("demo_seed")
+    if seed:
+        # Seed publico -> clave de demo determinista. Firma ed25519 es determinista
+        # (RFC 8032), asi que las firmas resultantes son estables para --check.
+        return Ed25519PrivateKey.from_private_bytes(hashlib.sha256(seed.encode()).digest())
+
+    raise ValueError("manifest['signing'] necesita 'private_key_path' o 'demo_seed'")
+
+
+def public_key_b64(private_key) -> str:
+    """Clave publica ed25519 (32 bytes crudos) en base64."""
+    from cryptography.hazmat.primitives import serialization
+
+    raw = private_key.public_key().public_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PublicFormat.Raw,
+    )
+    return base64.b64encode(raw).decode()
+
+
+def sign_skills(skills: list[dict[str, Any]], private_key) -> None:
+    """Firma los bytes normalizados de cada SKILL.md y guarda la firma base64 en cada skill."""
+    for s in skills:
+        normalized = s["path"].read_bytes().replace(b"\r\n", b"\n")
+        s["signature"] = base64.b64encode(private_key.sign(normalized)).decode()
+
+
+def render_index(skills: list[dict[str, Any]], signing_key_b64: str | None) -> str:
     """Construye el indice canonico .well-known/agent-skills/index.json."""
     items: list[dict[str, Any]] = []
     for s in skills:
@@ -125,8 +182,16 @@ def render_index(skills: list[dict[str, Any]]) -> str:
             item["homepage"] = s["homepage"]
         item["url"] = s["url"]
         item["sha256"] = s["sha256"]
+        if s.get("signature"):
+            item["signature"] = s["signature"]
         items.append(item)
-    return json.dumps({"skills": items}, indent=2, ensure_ascii=False) + "\n"
+
+    doc: dict[str, Any] = {}
+    if signing_key_b64:
+        doc["signing_alg"] = "ed25519"
+        doc["signing_key"] = signing_key_b64
+    doc["skills"] = items
+    return json.dumps(doc, indent=2, ensure_ascii=False) + "\n"
 
 
 def build_targets(manifest: dict[str, Any], skills: list[dict[str, Any]]) -> list[tuple[Path, str]]:
@@ -140,13 +205,23 @@ def build_targets(manifest: dict[str, Any], skills: list[dict[str, Any]]) -> lis
         raise ValueError(f"default_skill '{default_name}' no esta en la lista published")
     new_default = default_skill["path"].read_text(encoding="utf-8")
 
-    new_index = render_index(skills)
+    # Firma (autenticidad). Opcional: solo si el manifest declara "signing".
+    private_key = load_signing_key(manifest)
+    signing_key_b64 = None
+    if private_key is not None:
+        sign_skills(skills, private_key)
+        signing_key_b64 = public_key_b64(private_key)
+
+    new_index = render_index(skills, signing_key_b64)
 
     targets = [
         (LLMS_TXT_PATH, new_llms),
         (WELL_KNOWN_DEFAULT, new_default),
         (AGENT_SKILLS_INDEX, new_index),
     ]
+
+    if signing_key_b64:
+        targets.append((SIGNING_KEY_PUB, signing_key_b64 + "\n"))
 
     # Sincronizar la copia del consumer skill dentro del plugin de Claude Code.
     plugin = manifest.get("consumer_plugin")

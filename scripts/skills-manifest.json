@@ -1,6 +1,9 @@
 {
   "section_intro": "Remote Agent Skills published by this domain. See the RFC at `/docs/rfc-skills-in-llms-txt.md` for the proposed format.",
   "default_skill": "placeholder",
+  "signing": {
+    "demo_seed": "llms-txt-skills DEMO signing key - DO NOT USE IN PRODUCTION"
+  },
   "consumer_plugin": {
     "skill": "skills/llms-txt-aware/SKILL.md",
     "dest": "plugins/llms-txt-aware/skills/llms-txt-aware/SKILL.md"

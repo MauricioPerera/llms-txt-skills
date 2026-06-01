@@ -1,7 +1,7 @@
 # RFC: Publishing Agent Skills through `llms.txt`
 
-- **Status:** Draft (v0.4)
-- **Date:** 2026-05-19
+- **Status:** Draft (v0.5)
+- **Date:** 2026-06-01
 - **Author:** automators.work
 - **Depends on:** [llmstxt.org](https://llmstxt.org/) spec, [Agent Skills](https://agentskills.io) (`SKILL.md`)
 - **Reference implementation:** [img.automators.work](https://img.automators.work)
@@ -159,6 +159,24 @@ Step 5 is mandatory. Agents MUST NOT auto-install or auto-activate skills withou
 3. **Content verification.** If `sha256` is declared in the inline metadata, agents MUST verify the hash of the fetched file and refuse to load on mismatch.
 4. **Cross-origin skills require elevated confirmation.** If a skill URL is on a different origin from the `llms.txt` that references it, agents SHOULD require additional user confirmation beyond the base opt-in. This prevents a compromised `llms.txt` from silently delegating trust to a third-party host.
 5. **Least privilege.** Skills loaded from a domain operate within the permission scope of that domain. They cannot request filesystem access, network calls to unrelated origins, or other capabilities not stated in the skill's frontmatter without explicit user re-confirmation.
+
+### 4.6 Signing and authenticity (resolves Open Question 4)
+
+**Threat model.** A `sha256` declared in `## Skills` or in `index.json` provides **integrity** — the content was not corrupted in transit or by a CDN. It does **not** provide **authenticity**, because the same document that points to the skill also asserts its hash. A party that can modify the `llms.txt` or the index can rewrite the pointer and the hash together. Defending against a *compromised or malicious publisher* requires a signature whose trust is not rooted solely in the live document.
+
+**Two-tier model:**
+
+- **Tier 1 — Integrity (`sha256`).** MUST be verified when declared. Cheap, offline, no key management. Already specified in §2.2 and §4.3.
+- **Tier 2 — Authenticity (signature).** OPTIONAL. The publisher signs each `SKILL.md` with a private key kept **offline, off the web server**. The public key is published (e.g., `/.well-known/agent-skills/signing-key.pub`, and/or a `signing_key` field in `index.json`). Agents verify the signature over the skill content.
+
+**What the signature actually buys you.** Publishing the public key on the same origin does not, by itself, defeat a fully compromised origin: an attacker who controls the server can swap key, signatures, and content together. The value is:
+
+1. **Offline key.** Because the private key is not on the server, a server compromise *alone* (without the key) cannot forge valid signatures. The attacker can only serve unsigned or invalid-signature content, which a verifying agent rejects.
+2. **Agent-side key pinning (TOFU).** The agent pins the origin's public key on first use and warns / requires re-confirmation if it later changes. This detects silent key or skill swaps across sessions — the gap that plain `sha256` cannot close.
+
+**Higher assurance.** For identity-bound provenance, publishers SHOULD consider **keyless signing via a transparency log** (e.g., Sigstore): the artifact is signed by an OIDC identity — such as the CI workflow that built it — and recorded in a public log, so verification asserts *who* produced the artifact, not merely that *some* key did. Trade-off: verification needs network access to the transparency log, which sandboxed agents may lack; same-origin ed25519 + pinning works fully offline.
+
+**Reference implementation.** `scripts/generate.py` signs with ed25519 (deterministic, RFC 8032); `scripts/verify_signatures.py` verifies each `SKILL.md` against the published public key.
 
 ---
 
@@ -323,7 +341,7 @@ The agent:
 1. **Should `llms.txt` grow parallel `## MCP` and `## Agents` sections**, making it the single discovery document for a domain's full agent surface? Or should each standard manage its own discovery separately?
 2. **Cross-origin skill trust model.** Should cross-origin skills be disallowed entirely, allowed with elevated confirmation, or allowed freely? Current proposal: allowed with elevated confirmation (§4.4).
 3. **Archive format.** Should `.zip` be the only mandated archive format, or should `.tar.gz` remain in scope? `.zip` is more universally supported; `.tar.gz` is more natural for git-hosted skill bundles.
-4. **Signature scheme beyond `sha256`.** Is content hashing sufficient, or is a signing scheme (sigstore, Web Bot Auth) necessary for high-trust deployments?
+4. **Signature scheme beyond `sha256`.** Resolved (§4.6): a two-tier model — `sha256` for integrity (required when declared), plus optional ed25519 signatures over an offline key combined with agent-side key pinning for authenticity. Sigstore is recommended for identity-bound provenance where network-based verification is acceptable.
 5. **Relationship to `/.well-known/skills/`.** Resolved: sites SHOULD serve both. The two mechanisms have distinct, non-overlapping roles:
 
    | Layer | Mechanism | Role |
@@ -351,6 +369,7 @@ The agent:
 
 ## 10. Changelog
 
+- **v0.5 (2026-06-01):** Added §4.6 "Signing and authenticity" with a two-tier trust model (sha256 integrity + optional ed25519 signatures over an offline key, plus agent-side key pinning); resolved Open Question 4; added a reference signing implementation (`scripts/generate.py`, `scripts/verify_signatures.py`).
 - **v0.4 (2026-05-19):** Added §1.4 "Why structured over prose" addressing the free-form equivalence objection; simplified §2.2 inline metadata to version-only hint, delegating sha256/license/cost to `.well-known/agent-skills/index.json`; resolved Open Question 5 with explicit layer table for `## Skills` vs `.well-known`; fixed duplicate §6 heading.
 - **v0.3 (2026-05-19):** Expanded agent-side discovery triggers with four mechanisms (HTTP Link header, DNS TXT, HTML meta tag, convention probe); added recommended agent behavior flow; added cache strategy; updated examples with DemoShop.
 - **v0.2 (2026-04-21):** Added §3 ecosystem comparison; expanded §4 with cross-origin security rule; added §5 on discovery triggers; added §1.2 infrastructure barrier argument; refined two use-case patterns in §2.4; updated open questions.

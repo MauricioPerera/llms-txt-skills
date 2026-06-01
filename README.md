@@ -127,9 +127,10 @@ La skill no inventa protocolos: usa lo que el sitio publica. Si el sitio no tien
 
 Este repo contiene:
 
-- **RFC v0.4**: especificación completa del protocolo
+- **RFC v0.5**: especificación completa del protocolo
 - **Parser y validador**: herramientas de referencia en Python
 - **Generador/sincronizador**: regenera `## Skills`, la copia `.well-known` y el índice canónico desde el frontmatter de cada skill
+- **Firma y verificación**: firma ed25519 de cada skill (autenticidad) y verificador independiente
 - **JSON Schema**: validación estructurada de la salida del parser
 - **Skills de ejemplo**: `placeholder` y `api-client` para `img.automators.work`
 - **Skill de consumo**: `llms-txt-aware` para que los agentes descubran skills automáticamente
@@ -143,12 +144,13 @@ llms-txt-skills/
 ├── README.md                         # Este archivo
 ├── .gitignore
 ├── docs/
-│   └── rfc-skills-in-llms-txt.md     # RFC completo (v0.4)
+│   └── rfc-skills-in-llms-txt.md     # RFC completo (v0.5)
 ├── scripts/
 │   ├── parse_llms_txt_skills.py      # Parser de referencia
 │   ├── validate.py                   # Validador de llms.txt y skills
-│   ├── generate.py                   # Generador/sincronizador (--check para CI)
-│   └── skills-manifest.json          # Qué skills publica el dominio
+│   ├── generate.py                   # Generador/sincronizador + firma (--check para CI)
+│   ├── verify_signatures.py          # Verifica firmas ed25519 del índice
+│   └── skills-manifest.json          # Qué skills publica el dominio + config de firma
 ├── schema/
 │   └── llms-txt-skills.schema.json   # Schema JSON para validación
 ├── skills/
@@ -163,9 +165,11 @@ llms-txt-skills/
 │   └── skill-test-results.md           # Resultados de pruebas manuales
 ├── .well-known/
 │   ├── skills/default/SKILL.md         # Alias de compatibilidad (generado)
-│   └── agent-skills/index.json         # Índice canónico de metadata (generado)
+│   └── agent-skills/
+│       ├── index.json                  # Índice canónico: metadata + sha256 + firma (generado)
+│       └── signing-key.pub             # Clave pública ed25519 del publisher (generado)
 └── .github/workflows/
-    └── validate.yml                    # CI: valida + chequea sincronización
+    └── validate.yml                    # CI: valida + sincronización + firmas
 ```
 
 ---
@@ -257,7 +261,17 @@ python scripts/generate.py          # regenera ## Skills, .well-known/skills/def
 python scripts/generate.py --check  # falla si algo quedó desincronizado (lo usa CI)
 ```
 
-El generador toma `name`, `description`, `version` y `license` del frontmatter de cada `SKILL.md`, calcula el `sha256` (CRLF→LF) y escribe las tres salidas de forma determinista. El step `--check` en CI garantiza que nunca haya drift entre el `SKILL.md` y lo publicado.
+El generador toma `name`, `description`, `version` y `license` del frontmatter de cada `SKILL.md`, calcula el `sha256` (CRLF→LF) y escribe las salidas de forma determinista. El step `--check` en CI garantiza que nunca haya drift entre el `SKILL.md` y lo publicado.
+
+### Firmar las skills (autenticidad)
+
+Si el manifest declara `signing`, el generador firma cada `SKILL.md` con ed25519 y agrega `signing_key` + `signature` al `index.json` (y escribe `signing-key.pub`). La firma es determinista (RFC 8032), así que `--check` sigue siendo idempotente.
+
+```bash
+python scripts/verify_signatures.py   # verifica las firmas contra la clave pública del publisher
+```
+
+En producción, el publisher usa `"signing": {"private_key_path": "..."}` con una clave **offline que nunca se commitea**. El repo de ejemplo usa `"demo_seed"` (clave de demo derivada de un seed público, reproducible) — **no usar en producción**. Ver el modelo de confianza completo en el RFC §4.6.
 
 ---
 
@@ -372,7 +386,7 @@ El parser y validador de este repo son **herramientas de referencia**, no produc
 
 4. **Verificación `sha256`:** el validador compara hash contra contenido real para paths locales (con normalización CRLF→LF). Para URLs remotas, la verificación sigue siendo responsabilidad del agente runtime.
 
-5. **Modelo de confianza:** el `sha256` inline lo asevera el mismo `llms.txt` que apunta a la skill, por lo que protege contra corrupción en tránsito pero no contra un publisher malicioso. Una firma criptográfica (sigstore, Web Bot Auth) queda como trabajo futuro (RFC Open Question 4).
+5. **Modelo de confianza:** el `sha256` da **integridad** (no cambió en tránsito) pero no **autenticidad** — lo asevera el mismo documento que apunta a la skill. Para autenticidad el repo implementa firma ed25519 sobre una clave offline + key-pinning del lado del agente (RFC §4.6). Esto defiende contra un servidor comprometido sin la clave privada, pero no contra el robo de la clave offline; para provenance ligado a identidad, el RFC recomienda firma keyless con transparency log (Sigstore), que requiere red para verificar.
 
 ---
 
