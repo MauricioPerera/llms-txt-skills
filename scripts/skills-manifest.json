@@ -1,0 +1,16 @@
+{
+  "section_intro": "Remote Agent Skills published by this domain. See the RFC at `/docs/rfc-skills-in-llms-txt.md` for the proposed format.",
+  "default_skill": "placeholder",
+  "published": [
+    {
+      "path": "skills/placeholder/SKILL.md",
+      "url": "/skills/placeholder/SKILL.md",
+      "summary": "generate SVG placeholder image URLs for UI mockups via this API."
+    },
+    {
+      "path": "skills/api-client/SKILL.md",
+      "url": "/skills/api-client/SKILL.md",
+      "summary": "patterns for consuming the placeholder image API via HTTP."
+    }
+  ]
+}

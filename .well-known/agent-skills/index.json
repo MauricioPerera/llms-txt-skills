@@ -1,0 +1,22 @@
+{
+  "skills": [
+    {
+      "name": "placeholder",
+      "description": "Generate SVG placeholder images for UI mockups via the placeholder-img HTTP API. Use when the user asks for placeholder images, mockup assets, or dummy images with specific dimensions and colors.",
+      "version": "1.0.0",
+      "license": "MIT",
+      "homepage": "https://img.automators.work",
+      "url": "/skills/placeholder/SKILL.md",
+      "sha256": "f427124e22c7bfc3d45271081e2d5eff3b1f9d740f9685748f9d4abd99dd03df"
+    },
+    {
+      "name": "api-client",
+      "description": "Patterns for consuming the img.automators.work placeholder image API via HTTP. Use when building HTML mockups, CSS backgrounds, or design prototypes that need SVG placeholder images of specific dimensions and colors.",
+      "version": "1.0.0",
+      "license": "MIT",
+      "homepage": "https://img.automators.work",
+      "url": "/skills/api-client/SKILL.md",
+      "sha256": "2a2493a78e2f315de4f0220311392282a67da765815d8041cd73d4f20a23012d"
+    }
+  ]
+}
