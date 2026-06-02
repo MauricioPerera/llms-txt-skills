@@ -134,6 +134,7 @@ Este repo contiene:
 - **JSON Schema**: validación estructurada de la salida del parser
 - **Skills de ejemplo**: `placeholder` y `api-client` para `img.automators.work`
 - **Skill de consumo**: `llms-txt-aware` para que los agentes descubran skills automáticamente
+- **Consumers reales**: plugin de Claude Code, MCP server cross-runtime, y un PR nativo a aider — ver [estado de adopción](docs/adoption.md)
 - **Tests manuales**: resultados contra 3 dominios reales
 
 ### Estructura del repo
