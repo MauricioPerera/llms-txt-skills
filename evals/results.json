@@ -1,0 +1,275 @@
+[
+  {
+    "label": "reference",
+    "arms": [
+      {
+        "arm": "baseline",
+        "passed": 0,
+        "total": 2,
+        "rows": [
+          {
+            "id": "placeholder-green-banner",
+            "ok": false,
+            "answer": "I'll generate the image locally with PIL and save a PNG."
+          },
+          {
+            "id": "placeholder-square-tile",
+            "ok": false,
+            "answer": "I'll generate the image locally with PIL and save a PNG."
+          }
+        ]
+      },
+      {
+        "arm": "discovery",
+        "passed": 2,
+        "total": 2,
+        "rows": [
+          {
+            "id": "placeholder-green-banner",
+            "ok": true,
+            "answer": "<img src=\"https://img.automators.work/600x50?bg=22c55e\" alt=\"600x50 placeholder\">"
+          },
+          {
+            "id": "placeholder-square-tile",
+            "ok": true,
+            "answer": "<img src=\"https://img.automators.work/512x512?bg=f97316\" alt=\"512x512 placeholder\">"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "qwen2.5-0.5b-instruct",
+    "arms": [
+      {
+        "arm": "baseline",
+        "passed": 0,
+        "total": 2,
+        "rows": [
+          {
+            "id": "placeholder-green-banner",
+            "ok": false,
+            "answer": "https://img.automators.work/images/placeholder.png"
+          },
+          {
+            "id": "placeholder-square-tile",
+            "ok": false,
+            "answer": "https://img.automators.work/placeholder-512x512-orange.png"
+          }
+        ]
+      },
+      {
+        "arm": "discovery",
+        "passed": 0,
+        "total": 2,
+        "rows": [
+          {
+            "id": "placeholder-green-banner",
+            "ok": false,
+            "answer": "https://img.automators.work/600x50/green-placeholder.png"
+          },
+          {
+            "id": "placeholder-square-tile",
+            "ok": false,
+            "answer": "https://img.automators.work/{width}x{height}[?bg={hex}]"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "qwen3-0.6b",
+    "arms": [
+      {
+        "arm": "baseline",
+        "passed": 0,
+        "total": 2,
+        "rows": [
+          {
+            "id": "placeholder-green-banner",
+            "ok": false,
+            "answer": "Use the following command to fetch the 600x50 green placeholder image from the specified site:\n\n```bash\ncurl -s https://img.automators.work/ -o /path/to/image.png\n```"
+          },
+          {
+            "id": "placeholder-square-tile",
+            "ok": false,
+            "answer": "The exact URL provided is `https://img.automators.work`. To use this for a 512x512 placeholder tile in orange, you would typically embed or reference it directly in your UI mockup. If you need further assistance with embedding or using this image, let me know!"
+          }
+        ]
+      },
+      {
+        "arm": "discovery",
+        "passed": 2,
+        "total": 2,
+        "rows": [
+          {
+            "id": "placeholder-green-banner",
+            "ok": true,
+            "answer": "```html\n<img src=\"https://img.automators.work/600x50?bg=008000\" alt=\"green 600×50 placeholder\" width=\"600\" height=\"50\">\n```"
+          },
+          {
+            "id": "placeholder-square-tile",
+            "ok": true,
+            "answer": "Use the placeholder URL:  \nhttps://img.automators.work/512x512?bg=FFA500"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "llama-3.2-1b-instruct",
+    "arms": [
+      {
+        "arm": "baseline",
+        "passed": 0,
+        "total": 2,
+        "rows": [
+          {
+            "id": "placeholder-green-banner",
+            "ok": false,
+            "answer": "I can't create an image for you. However, I can guide you on how to create a similar placeholder using HTML and CSS.\r\n\r\n```html\n<div style=\"background-color: #c6efce; width: 600px; height: 50px;\">\n    <img src=\"https://img.automators.work/\">\n</div>\n```\n\nThis will create a green placeholder image with the specified dimensions."
+          },
+          {
+            "id": "placeholder-square-tile",
+            "ok": false,
+            "answer": "Here is the HTML code to display a 512x512 placeholder tile in orange:\n```\n<div class=\"ui tiling masonry\" style=\"background-color: #FFA07A; padding: 16px;\">\n  <div class=\"tile\">\n    <i class=\"icon orange\"></i>\n  </div>\n</div>\n```\nYou can copy and paste this code into your HTML file to display the placeholder tile."
+          }
+        ]
+      },
+      {
+        "arm": "discovery",
+        "passed": 1,
+        "total": 2,
+        "rows": [
+          {
+            "id": "placeholder-green-banner",
+            "ok": false,
+            "answer": "Here are some examples of how to use this skill in your code:\n\n**HTML/CSS**\n```html\n<img src=\"https://img.automators.work/800x450?bg=1e3a5f\" alt=\"hero\">\n```\n\n```css\n.hero { background-image: url(\"https://img.automators.work/1200x400?bg=1e3a5f\"); }\n```\n\n**JavaScript**\n```javascript\nconst placeholderUrl = `https://img.automators.work/${width}x${height}?bg=${hex6}`;\nfetch(placeholderUrl)\n  .then(response => response.text())\n  .then(svgString => {\n    const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');\n    svgElement.setAttribute('width', width);\n    svgElement.setAttribute('height', height);\n    svgElement.setAttribute('viewBox', `0 0 ${width} ${height}`);\n    svgElement.setAttribute('fill', hex6);\n    document.body.appendChild(svgElement);\n  });\n```\n\n**Python**\n```python\nimport requests\n\ndef get_placeholder(width, height):\n    url = f\"https://img.automators.work/{width}x{height}?bg={hex6}\"\n    response = requests.get(url)\n    if response.status_code == 200:\n        svg_string = response.text\n        # Parse SVG string into an HTML element\n        svg_element = svg_string.split('<svg')[0].split('</svg>')[1]\n        return svg_element\n    else:\n        raise Exception(f\"Failed to retrieve placeholder: {url}\")\n\n# Get a placeholder image with dimensions 800x450 and gray background\nplaceholder_image = get_placeholder(800, 450)\nprint(placeholder_image)\n```\n\n**Java**\n```java\nimport java.net.URI;\nimport java.util.HashMap;\nimport java.util.Map;\n\npublic class PlaceholderGenerator {\n    public static String getPlaceholder(int width, int height) throws Exception {\n        URI url = new URI(\"https://img.automators.work/\" + width + \"x\" + height + \"?bg=\" + hex6);\n        Map<String, String> params = new HashMap<>();\n        params.put(\"width\", Integer.toString(width));\n        params.put(\"height\", Integer.toString(height));\n        return url.getQuery();\n    }\n\n    public static void main(String[] args) throws Exception {\n        System.out.println(getPlaceholder(800, 450));\n    }\n}\n```\n\nNote that these examples assume you have the `requests` library installed. If not, you can install it using pip: `pip install requests`."
+          },
+          {
+            "id": "placeholder-square-tile",
+            "ok": true,
+            "answer": "I can generate URLs for the placeholder-img API based on the provided specifications.\n\nHere are some examples of URLs that match the requirements:\n\n* For a 512x512 orange placeholder:\n```bash\nhttps://img.automators.work/512x512?bg=ff9900\n```\n* For a 400x300 dark blue banner:\n```bash\nhttps://img.automators.work/400x300?bg=1e3a5f\n```\n* For a square brand tile (512x512):\n```bash\nhttps://img.automators.work/512x512?bg=f97316\n```\n* For a generic 800x450 placeholder:\n```bash\nhttps://img.automators.work/800x450?bg=cccccc\n```\n\nPlease note that these URLs are generated based on the provided specifications and may not be valid or functional in all cases.\n\nIf you need more specific or dynamic URLs, please let me know and I can try to generate them for you!"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "nvidia/nemotron-3-nano-4b",
+    "arms": [
+      {
+        "arm": "baseline",
+        "passed": 0,
+        "total": 2,
+        "rows": [
+          {
+            "id": "placeholder-green-banner",
+            "ok": false,
+            "answer": "https://img.automators.work/600x50/green.png"
+          },
+          {
+            "id": "placeholder-square-tile",
+            "ok": false,
+            "answer": "https://img.automators.work/placeholder?size=512&color=orange"
+          }
+        ]
+      },
+      {
+        "arm": "discovery",
+        "passed": 2,
+        "total": 2,
+        "rows": [
+          {
+            "id": "placeholder-green-banner",
+            "ok": true,
+            "answer": "https://img.automators.work/600x50?bg=00ff00"
+          },
+          {
+            "id": "placeholder-square-tile",
+            "ok": true,
+            "answer": "<img src=\"https://img.automators.work/512x512?bg=f97316\" alt=\"512×512 placeholder\" width=\"512\" height=\"512\">"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "ibm/granite-4-h-tiny",
+    "arms": [
+      {
+        "arm": "baseline",
+        "passed": 0,
+        "total": 2,
+        "rows": [
+          {
+            "id": "placeholder-green-banner",
+            "ok": false,
+            "answer": "To create a 600x50 green placeholder image using the provided website (https://img.automators.work/), you can use the following URL:\n\nhttps://img.automators.work/green/600x50\n\nThis URL will generate an image with the specified dimensions (600 pixels wide and 50 pixels high) filled with a green color, suitable for a placeholder image."
+          },
+          {
+            "id": "placeholder-square-tile",
+            "ok": false,
+            "answer": "Here is how you can generate a 512x512 placeholder tile in orange using the service at https://img.automators.work:\n\nThe URL to use is: \n\nhttps://img.automators.work/512x512/orange\n\nThis will return an image that matches your specifications for the UI mockup.\n\nSo in summary, just visit this URL in a browser or embed it into your code and you'll get the orange placeholder tile you need at the required size of 512x512 pixels."
+          }
+        ]
+      },
+      {
+        "arm": "discovery",
+        "passed": 2,
+        "total": 2,
+        "rows": [
+          {
+            "id": "placeholder-green-banner",
+            "ok": true,
+            "answer": "To create a 600x50 green placeholder image using the provided API, you can use the following URL:\n\n```\nhttps://img.automators.work/600x50?bg=00ff00\n``` \n\nThis will generate an SVG placeholder image that is 600 pixels wide and 50 pixels high with a green background color (`#00ff00`)."
+          },
+          {
+            "id": "placeholder-square-tile",
+            "ok": true,
+            "answer": "To generate a 512x512 orange placeholder tile using the provided API, you can use the following URL:\n\n```\nhttps://img.automators.work/512x512?bg=f97316\n```"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "qwen/qwen3.5-9b",
+    "arms": [
+      {
+        "arm": "baseline",
+        "passed": 1,
+        "total": 2,
+        "rows": [
+          {
+            "id": "placeholder-green-banner",
+            "ok": true,
+            "answer": "Based on the URL structure of placeholder image services, here's the command to create your 600x50 green placeholder image:\n\n**URL:** `https://img.automators.work/600x50/green`\n\nThis should generate a 600 pixels wide by 50 pixels tall green placeholder image. If this format doesn't work, try these alternative URL patterns that are common for such services:\n\n1. `https://img.automators.work/?width=600&height=50&color=green`\n2. `https://img.automators.work/600x50?color=green`\n\nPlease visit the site directly to confirm the exact URL format they use, as placeholder image services often have specific parameter requirements."
+          },
+          {
+            "id": "placeholder-square-tile",
+            "ok": false,
+            "answer": "I don't have access to browse the web or check what services are available on https://img.automators.work, so I cannot verify the exact URL pattern it prescribes for generating placeholder tiles.\n\nCommon placeholder image services typically follow patterns like:\n- `https://img.automators.work/512x512/orange`\n- `https://img.automators.work/placeholder/512x512/orange`\n- Or similar variations\n\nHowever, without being able to check the actual service documentation or available endpoints on that domain, I cannot provide the exact URL/command it prescribes.\n\nTo get the correct placeholder tile URL, you would need to:\n1. Check the img.automators.work documentation or website for their placeholder image API\n2. Look at any examples they provide in their code samples\n3. Or contact their support team for the proper endpoint format\n\nWould you like me to help with anything else regarding your UI mockup, or do you have access to the img.automators.work documentation that I could reference?"
+          }
+        ]
+      },
+      {
+        "arm": "discovery",
+        "passed": 2,
+        "total": 2,
+        "rows": [
+          {
+            "id": "placeholder-green-banner",
+            "ok": true,
+            "answer": "Based on the placeholder-img API at https://img.automators.work, here's the URL for your 600×50 green placeholder image:\n\n```html\n<img src=\"https://img.automators.work/600x50?bg=22c55e\" alt=\"600×50 placeholder\" width=\"600\" height=\"50\">\n```\n\nOr for CSS background usage:\n\n```css\nbackground-image: url(\"https://img.automators.work/600x50?bg=22c55e\");\n```\n\n**URL:** `https://img.automators.work/600x50?bg=22c55e`\n\nThis will return an SVG placeholder image with:\n- Dimensions: 600×50 pixels\n- Background color: Green (hex `22c55e`)\n- Centered text showing \"600×50\"\n- Auto-selected text color based on background luminance"
+          },
+          {
+            "id": "placeholder-square-tile",
+            "ok": true,
+            "answer": "Based on the placeholder-img API skill, here's the URL for your 512×512 orange placeholder tile:\n\n```html\n<img src=\"https://img.automators.work/512x512?bg=f97316\" alt=\"512×512 placeholder\" width=\"512\" height=\"512\">\n```\n\n**URL breakdown:**\n- Base: `https://img.automators.work`\n- Dimensions: `512x512` (square tile)\n- Orange background: `bg=f97316` (standard orange hex from the API examples)\n\nThis will generate an SVG placeholder showing \"512×512\" centered on an orange background, perfect for UI mockups."
+          }
+        ]
+      }
+    ]
+  }
+]

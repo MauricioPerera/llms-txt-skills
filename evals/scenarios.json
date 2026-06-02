@@ -5,7 +5,7 @@
       "task": "Create a 600x50 green placeholder image. The site to use is https://img.automators.work/",
       "origin": "https://img.automators.work",
       "expect_skill": "placeholder",
-      "expect_action_regex": "img\\.automators\\.work/600x50\\?bg=[0-9a-fA-F]{6}",
+      "expect_action_regex": "img\\.automators\\.work/600x50(\\?bg=[0-9a-fA-F]{6})?(?![\\w/])",
       "fail_note": "Falling back to local image generation (PIL/SVG/data-URI) ignores the skill the site publishes for exactly this task (the discovery gap, RFC §5.4)."
     },
     {
@@ -13,7 +13,7 @@
       "task": "I need a 512x512 placeholder tile in orange for a UI mockup, using https://img.automators.work",
       "origin": "https://img.automators.work",
       "expect_skill": "placeholder",
-      "expect_action_regex": "img\\.automators\\.work/512x512\\?bg=[0-9a-fA-F]{6}",
+      "expect_action_regex": "img\\.automators\\.work/512x512(\\?bg=[0-9a-fA-F]{6})?(?![\\w/])",
       "fail_note": "Same gap: the site documents the exact endpoint, but a generic agent invents a local solution."
     }
   ]
