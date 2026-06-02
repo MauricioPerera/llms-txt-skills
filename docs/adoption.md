@@ -1,6 +1,6 @@
 # State of adoption
 
-A single, linkable summary of where the `## Skills` in `llms.txt` proposal stands: what consumes it, how trust works, and where it has been proposed. Updated 2026-06-01 (RFC v0.5).
+A single, linkable summary of where the `## Skills` in `llms.txt` proposal stands: what consumes it, how trust works, and where it has been proposed. Updated 2026-06-02 (RFC v0.5).
 
 ## Consumers (you can use these today)
 
@@ -29,6 +29,18 @@ Verify it yourself:
 pip install cryptography
 python scripts/verify_signatures.py   # verifies signatures in index.json against the actual SKILL.md files
 ```
+
+## Live reference sites
+
+All three are published by the project author (first-party demos — **not** third-party adoption, which remains the open gap). Each serves a signed `index.json` you can verify live.
+
+| Site | What it shows | Skills |
+|---|---|---|
+| [img.automators.work](https://img.automators.work) | Minimal Pattern A — an image API wrapped by a skill | `placeholder`, `api-client` |
+| [demoshop-88e.pages.dev](https://demoshop-88e.pages.dev) | A storefront flow: search → cart → checkout | `product-search`, `cart-add`, `checkout-complete` |
+| [**wireframe-studio.pages.dev**](https://wireframe-studio.pages.dev) | Most complete showcase: a **landing page that explains the standard for humans**, a working JSON-to-UI tool, real API endpoints, and an ed25519-signed `index.json` that verifies live | `wireframe-schema`, `validate-wireframe`, `design-tokens` |
+
+[WireframeStudio](https://wireframe-studio.pages.dev) is the best single entry point: it pairs a human-readable explainer of `## Skills` with a backend that implements and signs it.
 
 ## Publishing without manual work
 
