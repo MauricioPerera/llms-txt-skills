@@ -150,6 +150,18 @@ Step 5 is mandatory. Agents MUST NOT auto-install or auto-activate skills withou
 
 **This RFC does not replace MCP or A2A.** It fills the gap below them: the case where a site wants to publish a skill for a simple API or interaction pattern, without running a server.
 
+### 3.1 Relationship to adjacent protocols
+
+The core idea here — *a Markdown manifest hosted at your domain that agents read, with no server process* — is being arrived at independently by others, which is a useful signal that the pattern is sound.
+
+**[auth.md](https://github.com/workos/auth.md) (WorkOS).** A protocol where a service hosts an `AUTH.md` describing how an agent can register and authenticate on the user's behalf, discovered via `/.well-known/oauth-authorization-server` metadata. It is **complementary, not competing**, with this RFC:
+
+- **Different layer.** `auth.md` answers *"how does an agent authenticate to this service?"*; `## Skills` answers *"what can an agent do here, and how?"*. This RFC's example skills are deliberately auth-free; `auth.md` is exactly the missing authentication layer. A fully agent-ready domain can serve **both**: `## Skills` for capability discovery and `AUTH.md` for credential acquisition.
+- **Discovery alignment.** `auth.md` is discovered through a `.well-known` pointer that carries a `skill` field referencing the manifest — the same shape as this RFC's `/.well-known/agent-skills/index.json` metadata layer (§8, Open Question 5). The two `.well-known` documents can coexist.
+- **Terminology overlap.** `auth.md` uses the word "skill" for its auth manifest, distinct from an [Agent Skills](https://agentskills.io) `SKILL.md`. Implementers should not conflate the two.
+
+**General principle.** As more agent-facing Markdown conventions appear (`llms.txt`, `## Skills`, `AUTH.md`, `.well-known/*`), the risk is fragmentation. This RFC's position: `llms.txt` is the natural **co-located discovery layer** — an agent already reading it to understand a domain should find capability and pointer information there in one fetch, with `.well-known` and protocol-specific manifests (like `AUTH.md`) as the verification and specialized layers beneath it.
+
 ---
 
 ## 4. Security
@@ -369,7 +381,7 @@ The agent:
 
 ## 10. Changelog
 
-- **v0.5 (2026-06-01):** Added §4.6 "Signing and authenticity" with a two-tier trust model (sha256 integrity + optional ed25519 signatures over an offline key, plus agent-side key pinning); resolved Open Question 4; added a reference signing implementation (`scripts/generate.py`, `scripts/verify_signatures.py`).
+- **v0.5 (2026-06-01):** Added §4.6 "Signing and authenticity" with a two-tier trust model (sha256 integrity + optional ed25519 signatures over an offline key, plus agent-side key pinning); resolved Open Question 4; added a reference signing implementation (`scripts/generate.py`, `scripts/verify_signatures.py`); added §3.1 "Relationship to adjacent protocols" positioning auth.md (WorkOS) as a complementary authentication layer.
 - **v0.4 (2026-05-19):** Added §1.4 "Why structured over prose" addressing the free-form equivalence objection; simplified §2.2 inline metadata to version-only hint, delegating sha256/license/cost to `.well-known/agent-skills/index.json`; resolved Open Question 5 with explicit layer table for `## Skills` vs `.well-known`; fixed duplicate §6 heading.
 - **v0.3 (2026-05-19):** Expanded agent-side discovery triggers with four mechanisms (HTTP Link header, DNS TXT, HTML meta tag, convention probe); added recommended agent behavior flow; added cache strategy; updated examples with DemoShop.
 - **v0.2 (2026-04-21):** Added §3 ecosystem comparison; expanded §4 with cross-origin security rule; added §5 on discovery triggers; added §1.2 infrastructure barrier argument; refined two use-case patterns in §2.4; updated open questions.
