@@ -1,6 +1,6 @@
 # RFC: Publishing Agent Skills through `llms.txt`
 
-- **Status:** Draft (v0.7)
+- **Status:** Draft (v0.8)
 - **Date:** 2026-06-02
 - **Author:** automators.work
 - **Depends on:** [llmstxt.org](https://llmstxt.org/) spec, [Agent Skills](https://agentskills.io) (`SKILL.md`)
@@ -199,6 +199,8 @@ So `llms.txt` Skills can be the **server-less catalog** these consumer-side mech
 The same workflow gets built with **one tool definition in context instead of 25**. The decisive, model-independent result is the 4k overflow: the raw tool list is *unusable* on a small model, while a skill's declared segment is not. (Honest scoping: once the tools *fit*, the orchestration gap among the MCP arms is marginal on an easy task with a capable model; and the leanest REST arm trades the SDK's parameter validation for speed. It is a single-model POC, not a benchmark — see its README.)
 
 This is the same pattern already live on the reference site **[demoshop](https://demoshop-88e.pages.dev)**, whose skills (`product-search`, `cart-add`) teach an agent to call one REST endpoint directly — zero tools in context — for *simple* capabilities. The n8n POC shows the pattern **scales to a complex, tool-heavy capability**, and maps the cost of each rung.
+
+**Reproducing the server, not just shrinking it.** A companion experiment (`n8n-skills-sdk`) takes the last rung — *no MCP at all*. The n8n MCP's build path turns out to be a thin wrapper over the [`@n8n/workflow-sdk`](https://www.npmjs.com/package/@n8n/workflow-sdk) package (local code→JSON parse + `validateWorkflow`) plus one REST call (`POST /workflows`): `get_sdk_reference`, `validate_workflow`, and `create_workflow_from_code` map onto the package's own exports and the public API. Delivered as a published `SKILL.md` + three local tools (`reference`/`validate`/`create`), a local model built, validated, and created the same workflows the MCP does — in **~3 tool calls vs. the MCP's 6–7**, with **validation preserved** (unlike a naive REST call) and only **3 tool definitions in context**. Two capable ~8–9B models (Qwen, Granite) succeeded cleanly; a 3B model hit a code-writing floor (a property of the model, not the delivery mechanism). The lesson for this RFC: when a capability's "tools" are really *a procedure over a library plus an API*, a **published skill can carry the procedure** and the library/API do the work — the server becomes optional.
 
 ---
 
@@ -419,6 +421,7 @@ The agent:
 
 ## 10. Changelog
 
+- **v0.8 (2026-06-02):** Extended §3.3 with the `n8n-skills-sdk` companion experiment — reproducing the n8n MCP's build path entirely with a published skill + `@n8n/workflow-sdk` (local parse/validate) + the REST API (no MCP): a local model builds+validates+creates the same workflows in ~3 tool calls (vs the MCP's 6–7), validation preserved, 3 tool defs in context; cross-model (8–9B succeed, 3B hits a code-writing floor).
 - **v0.7 (2026-06-02):** Added §3.3 "Skills as the recipe layer over tool discovery" positioning this RFC against tool-bloat work (Anthropic Tool Search / `defer_loading`, MCP progressive-disclosure SEP #1888, tool RAG) as the publisher-side, recipe-bearing layer those consumer/server-side mechanisms need a catalog for; added a reference POC (`evals/poc_orchestration/`) driving a live n8n MCP (25 tools) through five arms (25→1 tool defs in context), with demoshop as the simple-capability anchor.
 - **v0.6 (2026-06-02):** Added §3.2 "Relationship to `agents.txt` (the action layer)" positioning agents.txt as a complementary discovery layer and this RFC as the authenticity layer it omits; the reference generator now emits `/.well-known/agent-skills/index.json` as a superset of the agentskills.io `discovery/0.2.0` schema (`type` + `digest`) so one file serves both agents.txt/agentskills.io consumers and Tier-2 signature verifiers.
 - **v0.5 (2026-06-01):** Added §4.6 "Signing and authenticity" with a two-tier trust model (sha256 integrity + optional ed25519 signatures over an offline key, plus agent-side key pinning); resolved Open Question 4; added a reference signing implementation (`scripts/generate.py`, `scripts/verify_signatures.py`); added §3.1 "Relationship to adjacent protocols" positioning auth.md (WorkOS) as a complementary authentication layer.
