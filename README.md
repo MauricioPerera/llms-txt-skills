@@ -135,6 +135,7 @@ Este repo contiene:
 - **Skills de ejemplo**: `placeholder` y `api-client` para `img.automators.work`
 - **Skill de consumo**: `llms-txt-aware` para que los agentes descubran skills automáticamente
 - **Consumers reales**: plugin de Claude Code, MCP server cross-runtime, y un PR nativo a aider — ver [estado de adopción](docs/adoption.md)
+- **Benchmark empírico**: harness que mide el uso correcto de skills baseline vs discovery — ver [evals/](evals/README.md)
 - **Tests manuales**: resultados contra 3 dominios reales
 
 ### Estructura del repo
@@ -145,32 +146,43 @@ llms-txt-skills/
 ├── README.md                         # Este archivo
 ├── .gitignore
 ├── docs/
-│   └── rfc-skills-in-llms-txt.md     # RFC completo (v0.5)
+│   ├── rfc-skills-in-llms-txt.md     # RFC completo (v0.5)
+│   ├── adoption.md                   # Estado de adopción (consumers, trust model, hilos)
+│   ├── articulo-propuesta.md         # Divulgación
+│   └── articulo-linkedin.md          # Divulgación
 ├── scripts/
 │   ├── parse_llms_txt_skills.py      # Parser de referencia
 │   ├── validate.py                   # Validador de llms.txt y skills
 │   ├── generate.py                   # Generador/sincronizador + firma (--check para CI)
 │   ├── verify_signatures.py          # Verifica firmas ed25519 del índice
-│   └── skills-manifest.json          # Qué skills publica el dominio + config de firma
+│   ├── skills-manifest.json          # Qué skills publica el dominio + config de firma
+│   └── deploy-cloudflare-pages.sh    # Script de despliegue
 ├── schema/
 │   └── llms-txt-skills.schema.json   # Schema JSON para validación
 ├── skills/
-│   ├── placeholder/SKILL.md            # Skill de ejemplo: generador de imágenes
-│   ├── api-client/SKILL.md             # Skill de ejemplo: cliente HTTP
-│   └── llms-txt-aware/SKILL.md         # Skill de consumo (fuente canónica)
+│   ├── placeholder/SKILL.md          # Skill de ejemplo: generador de imágenes
+│   ├── api-client/SKILL.md           # Skill de ejemplo: cliente HTTP
+│   └── llms-txt-aware/SKILL.md       # Skill de consumo (fuente canónica)
+├── integrations/
+│   └── mcp/                          # MCP server: descubrir/consumir skills en cualquier runtime MCP
+├── evals/
+│   ├── harness.py                    # Benchmark baseline vs discovery (adapters LM Studio/Anthropic/CF)
+│   ├── scenarios.json                # Escenarios del benchmark
+│   ├── results.md                    # Resultados medidos
+│   └── README.md                     # Metodología
 ├── .claude-plugin/
-│   └── marketplace.json                # Marketplace de Claude Code
+│   └── marketplace.json              # Marketplace de Claude Code
 ├── plugins/
-│   └── llms-txt-aware/                 # Plugin instalable (skill generado desde la fuente)
+│   └── llms-txt-aware/               # Plugin instalable (skill generado desde la fuente)
 ├── tests/
-│   └── skill-test-results.md           # Resultados de pruebas manuales
+│   └── skill-test-results.md         # Resultados de pruebas manuales
 ├── .well-known/
-│   ├── skills/default/SKILL.md         # Alias de compatibilidad (generado)
+│   ├── skills/default/SKILL.md       # Alias de compatibilidad (generado)
 │   └── agent-skills/
-│       ├── index.json                  # Índice canónico: metadata + sha256 + firma (generado)
-│       └── signing-key.pub             # Clave pública ed25519 del publisher (generado)
+│       ├── index.json                # Índice canónico: metadata + sha256 + firma (generado)
+│       └── signing-key.pub           # Clave pública ed25519 del publisher (generado)
 └── .github/workflows/
-    └── validate.yml                    # CI: valida + sincronización + firmas
+    └── validate.yml                  # CI: valida + sincronización + firmas
 ```
 
 ---
