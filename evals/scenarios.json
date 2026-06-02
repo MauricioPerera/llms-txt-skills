@@ -15,6 +15,47 @@
       "expect_skill": "placeholder",
       "expect_action_regex": "img\\.automators\\.work/512x512(\\?bg=[0-9a-fA-F]{6})?(?![\\w/])",
       "fail_note": "Same gap: the site documents the exact endpoint, but a generic agent invents a local solution."
+    },
+    {
+      "id": "placeholder-blue-hero",
+      "task": "Give me a 1200x400 dark blue hero banner placeholder from https://img.automators.work",
+      "origin": "https://img.automators.work",
+      "expect_skill": "placeholder",
+      "expect_action_regex": "img\\.automators\\.work/1200x400(\\?bg=[0-9a-fA-F]{6})?(?![\\w/])",
+      "fail_note": "A third dimension to check consistency of correct-endpoint usage."
+    },
+    {
+      "id": "demoshop-product-search",
+      "task": "Search the DemoShop store for bluetooth products. Site: https://demoshop-88e.pages.dev",
+      "origin": "https://demoshop-88e.pages.dev",
+      "expect_skill": "product-search",
+      "reference_query": "bluetooth",
+      "expect_action_regex": "demoshop-88e\\.pages\\.dev/api/products\\?q=\\w",
+      "fail_note": "Different skill type (a real API call). Baseline cannot know the /api/products?q= endpoint without the published skill."
+    },
+    {
+      "id": "demoshop-cart-add",
+      "task": "Add 2 units of product id 1 to the cart on https://demoshop-88e.pages.dev",
+      "origin": "https://demoshop-88e.pages.dev",
+      "expect_skill": "cart-add",
+      "expect_action_regex": "demoshop-88e\\.pages\\.dev/api/cart(?![\\w/])",
+      "fail_note": "A POST-with-body skill. Baseline cannot know the /api/cart endpoint without the published skill."
+    },
+    {
+      "id": "wireframe-design-tokens",
+      "task": "Fetch the 'blueprint' theme design tokens as a DESIGN.md from https://wireframe-studio.pages.dev",
+      "origin": "https://wireframe-studio.pages.dev",
+      "expect_skill": "design-tokens",
+      "expect_action_regex": "wireframe-studio\\.pages\\.dev/api/design-tokens\\?[^\"\\s]*theme=blueprint",
+      "fail_note": "Third independent site. Baseline cannot know the /api/design-tokens endpoint or its theme param without the published skill."
+    },
+    {
+      "id": "wireframe-validate",
+      "task": "Validate a wireframe JSON using the WireframeStudio service at https://wireframe-studio.pages.dev",
+      "origin": "https://wireframe-studio.pages.dev",
+      "expect_skill": "validate-wireframe",
+      "expect_action_regex": "wireframe-studio\\.pages\\.dev/api/validate(?![\\w/])",
+      "fail_note": "A POST validation endpoint. Baseline cannot know /api/validate without the published skill."
     }
   ]
 }

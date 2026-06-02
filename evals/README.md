@@ -24,8 +24,8 @@ python evals/harness.py --reference
 This runs a **deterministic reference solver** (no model) against the live site:
 
 ```
-[reference / baseline]  0/2 passed     # nothing to go on -> generic local fallback
-[reference / discovery] 2/2 passed     # fetches llms.txt + SKILL.md, derives the exact URL
+[reference / baseline]  0/7 passed     # nothing to go on -> generic local fallback
+[reference / discovery] 7/7 passed     # fetches llms.txt + SKILL.md, derives the exact endpoint
 ```
 
 The reference solver is **not a model** — it proves two things deterministically:
@@ -42,8 +42,9 @@ a real agent infers that.
 ## Producing model numbers
 
 The behavioral comparison — *do real models cross the gap?* — needs live models.
-**Results from a local run are in [`results.md`](results.md)** (baseline 8% →
-discovery 75% across 6 local models). Reproduce with any of:
+**Results from a local run are in [`results.md`](results.md)** (baseline 5% →
+discovery 79% across 6 local models, 7 scenarios over 3 reference sites).
+Reproduce with any of:
 
 ```bash
 # Local models via LM Studio (no API key) — start LM Studio's server first

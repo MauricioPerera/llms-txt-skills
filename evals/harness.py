@@ -47,9 +47,15 @@ HTTP_TIMEOUT = 15
 DEMO_COLORS = {"green": "22c55e", "orange": "f97316", "red": "ef4444", "blue": "1e3a5f"}
 
 
+BROWSER_UA = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+)
+
+
 def _http_get(url: str) -> Optional[str]:
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "llms-txt-skills-eval/1.0"})
+        req = urllib.request.Request(url, headers={"User-Agent": BROWSER_UA})
         with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT) as resp:  # noqa: S310
             return resp.read().decode("utf-8", "replace")
     except Exception:
@@ -100,22 +106,41 @@ def reference_agent(task: str, scenario: dict, context: Optional[str]) -> str:
     """
     Deterministically derive the prescribed action from the published artifacts.
 
-    Proves the scenario is machine-actionable from what the site publishes:
-    discover the skill, read its URL template, and fill it. NOT a model — color
-    name resolution is a hardcoded demo map. Without `context` (baseline arm),
-    it has nothing to go on and returns a generic local fallback (a fail).
+    Proves each scenario is machine-actionable from what the site publishes
+    (discover the skill, read its endpoint, fill it). NOT a model — it uses small
+    per-skill builders and scenario hints. Without `context` (baseline arm) it has
+    nothing to go on and returns a generic local fallback (a fail).
     """
     if not context:
-        return "I'll generate the image locally with PIL and save a PNG."  # baseline fail
-    m = re.search(r"(\d+)x(\d+)", task)
-    if not m:
-        return "Could not determine dimensions."
-    w, h = m.group(1), m.group(2)
-    color = next((hexv for name, hexv in DEMO_COLORS.items() if name in task.lower()), None)
+        return "I'll handle this locally without checking the site."  # baseline fail
+
     base_m = re.search(r"https?://[^\s/]+", scenario["origin"])
     base = base_m.group(0) if base_m else scenario["origin"]
-    url = f"{base}/{w}x{h}" + (f"?bg={color}" if color else "")
-    return f'<img src="{url}" alt="{w}x{h} placeholder">'
+    skill = scenario.get("expect_skill")
+
+    if skill == "placeholder":
+        m = re.search(r"(\d+)x(\d+)", task)
+        if not m:
+            return "Could not determine dimensions."
+        w, h = m.group(1), m.group(2)
+        color = next((hexv for name, hexv in DEMO_COLORS.items() if name in task.lower()), None)
+        url = f"{base}/{w}x{h}" + (f"?bg={color}" if color else "")
+        return f'<img src="{url}" alt="{w}x{h} placeholder">'
+
+    if skill == "product-search":
+        q = scenario.get("reference_query", "")
+        return f"GET {base}/api/products?q={q}"
+
+    if skill == "cart-add":
+        return f'POST {base}/api/cart with body {{"product_id": 1, "quantity": 2}}'
+
+    if skill == "design-tokens":
+        return f"GET {base}/api/design-tokens?theme=blueprint&format=md"
+
+    if skill == "validate-wireframe":
+        return f"POST {base}/api/validate with the wireframe JSON as the body"
+
+    return "Could not derive an action for this skill."
 
 
 # --------------------------------------------------------------------------- #
@@ -235,15 +260,21 @@ def main() -> int:
     ap.add_argument("--out", help="Append full results (with answers) to this JSON file")
     args = ap.parse_args()
 
+    # Console may be cp1252 on Windows; model output can contain other chars.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:  # noqa: BLE001
+        pass
+
     scenarios = json.loads(SCENARIOS.read_text(encoding="utf-8"))["scenarios"]
     arms = ["baseline", "discovery"] if args.arm == "both" else [args.arm]
 
     if args.reference:
         results = [run_arm(lambda t, s, c: reference_agent(t, s, c), scenarios, arm) for arm in arms]
-        for r in results:
-            print_result("reference", r)
         if args.out:
             dump_results(args.out, "reference", results)
+        for r in results:
+            print_result("reference", r)
         return 0
 
     if not args.model:
@@ -265,10 +296,10 @@ def main() -> int:
 
     label = args.model_id or args.model
     results = [run_arm(agent, scenarios, arm) for arm in arms]
-    for r in results:
-        print_result(label, r)
     if args.out:
         dump_results(args.out, label, results)
+    for r in results:
+        print_result(label, r)
     return 0
 
 
