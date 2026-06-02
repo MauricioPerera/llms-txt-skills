@@ -1,0 +1,82 @@
+{
+  "model": "qwen/qwen3.5-9b",
+  "url": "https://ardf.dev/mcp-server/http",
+  "rows": [
+    {
+      "task": "schedule-slack",
+      "arm": "naive",
+      "tool_calls": 7,
+      "errors": 0,
+      "turns": 6,
+      "n_tools": 25,
+      "validate_attempts": 2,
+      "validate_ok": true,
+      "created_ids": [
+        "GFnOEpeNeQv5cidY"
+      ],
+      "success": true,
+      "tool_sequence": [
+        "get_sdk_reference",
+        "search_nodes",
+        "get_node_types",
+        "get_node_types",
+        "validate_workflow",
+        "validate_workflow",
+        "create_workflow_from_code"
+      ],
+      "fatal": null,
+      "recovered_calls": 1,
+      "wall_s": 349.1
+    },
+    {
+      "task": "schedule-slack",
+      "arm": "n8n",
+      "tool_calls": 6,
+      "errors": 0,
+      "turns": 5,
+      "n_tools": 25,
+      "validate_attempts": 1,
+      "validate_ok": true,
+      "created_ids": [
+        "lTrmASZrYGzjLw5U"
+      ],
+      "success": true,
+      "tool_sequence": [
+        "get_sdk_reference",
+        "search_nodes",
+        "get_node_types",
+        "get_node_types",
+        "validate_workflow",
+        "create_workflow_from_code"
+      ],
+      "fatal": null,
+      "recovered_calls": 3,
+      "wall_s": 228.9
+    },
+    {
+      "task": "schedule-slack",
+      "arm": "skill",
+      "tool_calls": 6,
+      "errors": 0,
+      "turns": 6,
+      "n_tools": 8,
+      "validate_attempts": 1,
+      "validate_ok": true,
+      "created_ids": [
+        "paWueSGGvYMUXZCQ"
+      ],
+      "success": true,
+      "tool_sequence": [
+        "get_sdk_reference",
+        "search_nodes",
+        "get_node_types",
+        "get_node_types",
+        "validate_workflow",
+        "create_workflow_from_code"
+      ],
+      "fatal": null,
+      "recovered_calls": 4,
+      "wall_s": 241.4
+    }
+  ]
+}

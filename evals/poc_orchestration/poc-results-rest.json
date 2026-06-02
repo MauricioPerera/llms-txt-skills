@@ -1,0 +1,25 @@
+{
+  "model": "qwen/qwen3.5-9b",
+  "url": "https://ardf.dev/mcp-server/http",
+  "rows": [
+    {
+      "task": "schedule-slack",
+      "arm": "rest",
+      "tool_calls": 1,
+      "errors": 0,
+      "turns": 1,
+      "n_tools": 1,
+      "validate_attempts": 0,
+      "validate_ok": false,
+      "created_ids": [
+        "8XpEvr3fWNbj1y3V"
+      ],
+      "success": true,
+      "tool_sequence": [
+        "POST /workflows"
+      ],
+      "fatal": null,
+      "wall_s": 83.8
+    }
+  ]
+}

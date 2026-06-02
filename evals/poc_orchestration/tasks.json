@@ -1,0 +1,17 @@
+{
+  "comment": "Common n8n workflow-build tasks. The goal in every task is to CREATE a valid workflow in the n8n instance. Success = a create_workflow_from_code call returned a workflow id, built from validated code.",
+  "tasks": [
+    {
+      "id": "schedule-slack",
+      "task": "Create an n8n workflow that runs on a schedule (every day at 9am) and sends a message to Slack saying 'Daily standup time'. Build it and create it in n8n. Leave it as a draft."
+    },
+    {
+      "id": "webhook-http",
+      "task": "Create an n8n workflow with a Webhook trigger that, when called, makes an HTTP GET request to https://api.example.com/status and returns the response. Build it and create it in n8n. Leave it as a draft."
+    },
+    {
+      "id": "schedule-http-set",
+      "task": "Create an n8n workflow that runs every hour, calls the HTTP endpoint https://api.example.com/metrics, and uses a Set node to keep only the field 'value'. Build it and create it in n8n. Leave it as a draft."
+    }
+  ]
+}
