@@ -162,6 +162,41 @@ def cloudflare_agent(model: str) -> Callable[[str, dict, Optional[str]], str]:
     return run
 
 
+def lmstudio_agent(model: str, base_url: str = "http://localhost:1234/v1") -> Callable[[str, dict, Optional[str]], str]:
+    """Adapter for a local LM Studio server (OpenAI-compatible /chat/completions). No key needed."""
+
+    def run(task: str, scenario: dict, context: Optional[str]) -> str:
+        system = (
+            "You are a coding agent. When a site publishes a skill for the task, "
+            "use it and output the exact URL/command it prescribes."
+        )
+        user = task if context is None else f"{task}\n\n--- site context ---\n{context}"
+        payload = json.dumps(
+            {
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
+                ],
+                "temperature": 0,
+                "max_tokens": 600,
+            }
+        ).encode()
+        req = urllib.request.Request(
+            base_url.rstrip("/") + "/chat/completions",
+            data=payload,
+            headers={"Content-Type": "application/json", "Authorization": "Bearer lm-studio"},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=300) as resp:  # noqa: S310
+                data = json.load(resp)
+            return data["choices"][0]["message"]["content"]
+        except Exception as e:  # noqa: BLE001
+            return f"[error: {type(e).__name__}: {e}]"
+
+    return run
+
+
 def run_arm(agent: Callable, scenarios: list[dict], arm: str) -> dict:
     passed = 0
     rows = []
@@ -170,30 +205,45 @@ def run_arm(agent: Callable, scenarios: list[dict], arm: str) -> dict:
         answer = agent(sc["task"], sc, context)
         ok = score(sc, answer)
         passed += ok
-        rows.append((sc["id"], ok, answer.strip().replace("\n", " ")[:80]))
+        rows.append({"id": sc["id"], "ok": bool(ok), "answer": (answer or "").strip()})
     return {"arm": arm, "passed": passed, "total": len(scenarios), "rows": rows}
 
 
 def print_result(label: str, result: dict) -> None:
     print(f"\n[{label} / {result['arm']}] {result['passed']}/{result['total']} passed")
-    for sid, ok, preview in result["rows"]:
-        print(f"  {'PASS' if ok else 'FAIL':4}  {sid}: {preview}")
+    for r in result["rows"]:
+        preview = r["answer"].replace("\n", " ")[:80]
+        print(f"  {'PASS' if r['ok'] else 'FAIL':4}  {r['id']}: {preview}")
+
+
+def dump_results(path: str, label: str, results: list[dict]) -> None:
+    """Append this run's results to a JSON file (one record per model/label)."""
+    p = Path(path)
+    existing = json.loads(p.read_text(encoding="utf-8")) if p.exists() else []
+    existing = [r for r in existing if r.get("label") != label]
+    existing.append({"label": label, "arms": results})
+    p.write_text(json.dumps(existing, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="llms.txt skill discovery eval harness")
     ap.add_argument("--reference", action="store_true", help="Run deterministic reference solver (no key)")
-    ap.add_argument("--model", choices=["anthropic", "cloudflare"], help="Run a real model (needs API key)")
-    ap.add_argument("--model-id", help="Model id (e.g. claude-sonnet-4-6, @cf/meta/llama-3.1-8b-instruct)")
+    ap.add_argument("--model", choices=["anthropic", "cloudflare", "lmstudio"], help="Run a real model")
+    ap.add_argument("--model-id", help="Model id (e.g. claude-sonnet-4-6, @cf/meta/llama-3.1-8b-instruct, or an LM Studio model id)")
+    ap.add_argument("--base-url", default="http://localhost:1234/v1", help="LM Studio base URL")
     ap.add_argument("--arm", choices=["baseline", "discovery", "both"], default="both")
+    ap.add_argument("--out", help="Append full results (with answers) to this JSON file")
     args = ap.parse_args()
 
     scenarios = json.loads(SCENARIOS.read_text(encoding="utf-8"))["scenarios"]
     arms = ["baseline", "discovery"] if args.arm == "both" else [args.arm]
 
     if args.reference:
-        for arm in arms:
-            print_result("reference", run_arm(lambda t, s, c: reference_agent(t, s, c), scenarios, arm))
+        results = [run_arm(lambda t, s, c: reference_agent(t, s, c), scenarios, arm) for arm in arms]
+        for r in results:
+            print_result("reference", r)
+        if args.out:
+            dump_results(args.out, "reference", results)
         return 0
 
     if not args.model:
@@ -202,14 +252,23 @@ def main() -> int:
 
     if args.model == "anthropic":
         agent = anthropic_agent(args.model_id or "claude-sonnet-4-6")
+    elif args.model == "lmstudio":
+        if not args.model_id:
+            print("--model-id is required for lmstudio (an id from /v1/models)")
+            return 2
+        agent = lmstudio_agent(args.model_id, args.base_url)
     else:
         if not args.model_id:
             print("--model-id is required for cloudflare (e.g. @cf/meta/llama-3.1-8b-instruct)")
             return 2
         agent = cloudflare_agent(args.model_id)
 
-    for arm in arms:
-        print_result(args.model, run_arm(agent, scenarios, arm))
+    label = args.model_id or args.model
+    results = [run_arm(agent, scenarios, arm) for arm in arms]
+    for r in results:
+        print_result(label, r)
+    if args.out:
+        dump_results(args.out, label, results)
     return 0
 
 

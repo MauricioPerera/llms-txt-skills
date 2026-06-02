@@ -39,11 +39,17 @@ target site, which would make the build flaky. Run it manually as a conformance
 check. Color-name → hex resolution in the solver is a small hardcoded demo map;
 a real agent infers that.
 
-## Producing model numbers (needs your API keys)
+## Producing model numbers
 
-The behavioral comparison — *do real models cross the gap?* — needs live models:
+The behavioral comparison — *do real models cross the gap?* — needs live models.
+**Results from a local run are in [`results.md`](results.md)** (baseline 8% →
+discovery 75% across 6 local models). Reproduce with any of:
 
 ```bash
+# Local models via LM Studio (no API key) — start LM Studio's server first
+python evals/harness.py --model lmstudio --model-id qwen3-0.6b
+python evals/harness.py --model lmstudio --model-id <id> --out evals/results.json
+
 # Anthropic
 ANTHROPIC_API_KEY=... python evals/harness.py --model anthropic --model-id claude-sonnet-4-6
 
@@ -52,9 +58,9 @@ CLOUDFLARE_ACCOUNT_ID=... CLOUDFLARE_API_TOKEN=... \
   python evals/harness.py --model cloudflare --model-id @cf/meta/llama-3.1-8b-instruct
 ```
 
-Run each model and report `baseline` vs `discovery` pass rates. The expected
-shape of the result: baseline near zero (the model invents a local solution),
-discovery near 100% (given the site context, it uses the published endpoint).
+Report `baseline` vs `discovery` pass rates. Expected shape: baseline near zero
+(the model invents a local solution), discovery much higher (given the site
+context, it uses the published endpoint).
 
 This complements the 3-model A/B benchmark in
 [agentic-tools-poc](https://github.com/MauricioPerera/agentic-tools-poc), which
