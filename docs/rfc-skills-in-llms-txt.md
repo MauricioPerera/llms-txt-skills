@@ -1,7 +1,7 @@
 # RFC: Publishing Agent Skills through `llms.txt`
 
-- **Status:** Draft (v0.5)
-- **Date:** 2026-06-01
+- **Status:** Draft (v0.6)
+- **Date:** 2026-06-02
 - **Author:** automators.work
 - **Depends on:** [llmstxt.org](https://llmstxt.org/) spec, [Agent Skills](https://agentskills.io) (`SKILL.md`)
 - **Reference implementation:** [img.automators.work](https://img.automators.work)
@@ -161,6 +161,17 @@ The core idea here — *a Markdown manifest hosted at your domain that agents re
 - **Terminology overlap.** `auth.md` uses the word "skill" for its auth manifest, distinct from an [Agent Skills](https://agentskills.io) `SKILL.md`. Implementers should not conflate the two.
 
 **General principle.** As more agent-facing Markdown conventions appear (`llms.txt`, `## Skills`, `AUTH.md`, `.well-known/*`), the risk is fragmentation. This RFC's position: `llms.txt` is the natural **co-located discovery layer** — an agent already reading it to understand a domain should find capability and pointer information there in one fetch, with `.well-known` and protocol-specific manifests (like `AUTH.md`) as the verification and specialized layers beneath it.
+
+### 3.2 Relationship to `agents.txt` (the action layer)
+
+**[agents.txt](https://agents-txt.com).** A capability-declaration file (`/agents.txt` + optional `/agents.json`) that advertises which agent-facing protocols a site supports — payments (x402, MPP, AP2), authorization (agent-auth, OAuth2), MCP, A2A, UCP, WebMCP, and **Skills**. It positions itself as "Layer 4 (action)" above `robots.txt` (access) and `llms.txt` (content). Its `Skills:` directive and its `/.well-known/agent-skills/index.json` both build on the [Agent Skills](https://agentskills.io) `discovery/0.2.0` index schema.
+
+This RFC and `agents.txt` are **complementary along two axes**:
+
+- **Discovery surface.** `agents.txt` answers *"which capability families does this site expose?"* across many protocols at once; `## Skills` in `llms.txt` is the co-located, content-adjacent surface for the Skills family specifically. A site can serve both: a `Skills:` line in `agents.txt` and a `## Skills` section in `llms.txt`, pointing at the **same** `SKILL.md` artifacts.
+- **Trust.** `agents.txt`'s Skills layer carries discovery and integrity (`digest`) but **explicitly leaves authenticity out** ("prioritize discovery simplicity over trust verification"). That is exactly the gap this RFC's Tier 2 closes (§4.6): offline-key ed25519 signatures + agent-side key pinning. The two stack cleanly — `agents.txt`/agentskills.io for discovery and integrity, this RFC for authenticity.
+
+**Concrete interoperability (implemented).** The reference generator emits `/.well-known/agent-skills/index.json` as a **superset of the agentskills.io `discovery/0.2.0` schema**: every skill carries the fields that schema expects (`name`, `type: "skill-md"`, `description`, `url`, `digest: "sha256:…"`) *plus* this RFC's extensions (`version`, `license`, `homepage`, raw `sha256`, ed25519 `signature`, and a top-level `signing_key`). One file therefore satisfies both an `agents.txt`/agentskills.io consumer (discovery + integrity) and a Tier-2 consumer (authenticity) — the publisher maintains no second artifact. The redundant `digest` (prefixed form) and `sha256` (raw hex) fields are kept in parallel so existing consumers that read raw `sha256` are not broken.
 
 ---
 
@@ -381,6 +392,7 @@ The agent:
 
 ## 10. Changelog
 
+- **v0.6 (2026-06-02):** Added §3.2 "Relationship to `agents.txt` (the action layer)" positioning agents.txt as a complementary discovery layer and this RFC as the authenticity layer it omits; the reference generator now emits `/.well-known/agent-skills/index.json` as a superset of the agentskills.io `discovery/0.2.0` schema (`type` + `digest`) so one file serves both agents.txt/agentskills.io consumers and Tier-2 signature verifiers.
 - **v0.5 (2026-06-01):** Added §4.6 "Signing and authenticity" with a two-tier trust model (sha256 integrity + optional ed25519 signatures over an offline key, plus agent-side key pinning); resolved Open Question 4; added a reference signing implementation (`scripts/generate.py`, `scripts/verify_signatures.py`); added §3.1 "Relationship to adjacent protocols" positioning auth.md (WorkOS) as a complementary authentication layer.
 - **v0.4 (2026-05-19):** Added §1.4 "Why structured over prose" addressing the free-form equivalence objection; simplified §2.2 inline metadata to version-only hint, delegating sha256/license/cost to `.well-known/agent-skills/index.json`; resolved Open Question 5 with explicit layer table for `## Skills` vs `.well-known`; fixed duplicate §6 heading.
 - **v0.3 (2026-05-19):** Expanded agent-side discovery triggers with four mechanisms (HTTP Link header, DNS TXT, HTML meta tag, convention probe); added recommended agent behavior flow; added cache strategy; updated examples with DemoShop.

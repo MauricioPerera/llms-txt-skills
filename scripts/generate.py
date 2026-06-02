@@ -9,7 +9,10 @@ SKILL.md publicado, regenera de forma determinista:
 
   1. La seccion `## Skills` de llms.txt (con version, license y sha256 inline).
   2. La copia de compatibilidad `.well-known/skills/default/SKILL.md`.
-  3. El indice canonico `.well-known/agent-skills/index.json` (RFC v0.4 §2.2).
+  3. El indice `.well-known/agent-skills/index.json` (RFC v0.4 §2.2). El
+     documento es un superset del esquema de descubrimiento de agentskills.io
+     v0.2.0, de modo que tambien lo descubre y verifica agents.txt sin que el
+     publisher mantenga un segundo archivo (ver RFC §3.2).
   4. La copia del consumer skill dentro del plugin de Claude Code
      (plugins/llms-txt-aware/skills/llms-txt-aware/SKILL.md), porque los
      plugins se copian a cache y no pueden referenciar archivos externos.
@@ -168,25 +171,47 @@ def sign_skills(skills: list[dict[str, Any]], private_key) -> None:
         s["signature"] = base64.b64encode(private_key.sign(normalized)).decode()
 
 
+# Esquema de descubrimiento de agentskills.io que consume agents.txt
+# (https://agents-txt.com, capa "Skills"). Emitir un indice conforme a este
+# esquema en la misma ruta .well-known/agent-skills/index.json hace que un solo
+# archivo sirva a la vez a los consumidores de este RFC (sha256 + firma ed25519)
+# y a los de agents.txt / agentskills.io (type + digest). Ver RFC Sec. 3.2.
+AGENTSKILLS_DISCOVERY_SCHEMA = "https://schemas.agentskills.io/discovery/0.2.0/schema.json"
+
+
 def render_index(skills: list[dict[str, Any]], signing_key_b64: str | None) -> str:
-    """Construye el indice canonico .well-known/agent-skills/index.json."""
+    """Construye el indice .well-known/agent-skills/index.json.
+
+    El documento es un *superset* del esquema de descubrimiento agentskills.io
+    v0.2.0: cada skill lleva los campos que ese esquema espera (name, type,
+    description, url, digest) mas las extensiones de este RFC (version, license,
+    homepage, sha256, signature). `digest` es el mismo hash que `sha256` pero con
+    el prefijo "sha256:" que usa agentskills.io; se mantienen ambos para no
+    romper a los consumidores existentes (MCP server, verify_signatures.py) que
+    leen `sha256` crudo. Asi agents.txt descubre y verifica estas skills sin que
+    el publisher mantenga un segundo archivo.
+    """
     items: list[dict[str, Any]] = []
     for s in skills:
+        # Campos del esquema agentskills.io v0.2.0 primero, en su orden.
         item: dict[str, Any] = {
             "name": s["name"],
+            "type": "skill-md",
             "description": s["description"],
-            "version": s["version"],
-            "license": s["license"],
+            "url": s["url"],
+            "digest": f"sha256:{s['sha256']}",
         }
+        # Extensiones de este RFC.
+        item["version"] = s["version"]
+        item["license"] = s["license"]
         if s["homepage"]:
             item["homepage"] = s["homepage"]
-        item["url"] = s["url"]
         item["sha256"] = s["sha256"]
         if s.get("signature"):
             item["signature"] = s["signature"]
         items.append(item)
 
-    doc: dict[str, Any] = {}
+    doc: dict[str, Any] = {"$schema": AGENTSKILLS_DISCOVERY_SCHEMA}
     if signing_key_b64:
         doc["signing_alg"] = "ed25519"
         doc["signing_key"] = signing_key_b64

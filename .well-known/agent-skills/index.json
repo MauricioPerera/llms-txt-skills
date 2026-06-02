@@ -1,24 +1,29 @@
 {
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
   "signing_alg": "ed25519",
   "signing_key": "1e1Qc4KtZ1PiR8McDESrvmxZVCYqdsrQOiKSFgKjJNc=",
   "skills": [
     {
       "name": "placeholder",
+      "type": "skill-md",
       "description": "Generate SVG placeholder images for UI mockups via the placeholder-img HTTP API. Use when the user asks for placeholder images, mockup assets, or dummy images with specific dimensions and colors.",
+      "url": "/skills/placeholder/SKILL.md",
+      "digest": "sha256:f427124e22c7bfc3d45271081e2d5eff3b1f9d740f9685748f9d4abd99dd03df",
       "version": "1.0.0",
       "license": "MIT",
       "homepage": "https://img.automators.work",
-      "url": "/skills/placeholder/SKILL.md",
       "sha256": "f427124e22c7bfc3d45271081e2d5eff3b1f9d740f9685748f9d4abd99dd03df",
       "signature": "eeRB25THq9jC0i4dOLdg0Xd8O7UEZSYLuymv4ajujRgUsI5xQ6o0zJnk+weHnsfiXbklFRTPVZGJ89Z/ulKXDQ=="
     },
     {
       "name": "api-client",
+      "type": "skill-md",
       "description": "Patterns for consuming the img.automators.work placeholder image API via HTTP. Use when building HTML mockups, CSS backgrounds, or design prototypes that need SVG placeholder images of specific dimensions and colors.",
+      "url": "/skills/api-client/SKILL.md",
+      "digest": "sha256:2a2493a78e2f315de4f0220311392282a67da765815d8041cd73d4f20a23012d",
       "version": "1.0.0",
       "license": "MIT",
       "homepage": "https://img.automators.work",
-      "url": "/skills/api-client/SKILL.md",
       "sha256": "2a2493a78e2f315de4f0220311392282a67da765815d8041cd73d4f20a23012d",
       "signature": "xJVFJNO9UjH+TJ0JsoISlnWQedaqe1T4uIODnS7p97CNXl4XpMvYe8y9WHgyeJi9YTF1aFxlfhWpeXFAGU8IBg=="
     }
