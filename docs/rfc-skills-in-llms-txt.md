@@ -1,6 +1,6 @@
 # RFC: Publishing Agent Skills through `llms.txt`
 
-- **Status:** Draft (v0.6)
+- **Status:** Draft (v0.7)
 - **Date:** 2026-06-02
 - **Author:** automators.work
 - **Depends on:** [llmstxt.org](https://llmstxt.org/) spec, [Agent Skills](https://agentskills.io) (`SKILL.md`)
@@ -172,6 +172,33 @@ This RFC and `agents.txt` are **complementary along two axes**:
 - **Trust.** `agents.txt`'s Skills layer carries discovery and integrity (`digest`) but **explicitly leaves authenticity out** ("prioritize discovery simplicity over trust verification"). That is exactly the gap this RFC's Tier 2 closes (§4.6): offline-key ed25519 signatures + agent-side key pinning. The two stack cleanly — `agents.txt`/agentskills.io for discovery and integrity, this RFC for authenticity.
 
 **Concrete interoperability (implemented).** The reference generator emits `/.well-known/agent-skills/index.json` as a **superset of the agentskills.io `discovery/0.2.0` schema**: every skill carries the fields that schema expects (`name`, `type: "skill-md"`, `description`, `url`, `digest: "sha256:…"`) *plus* this RFC's extensions (`version`, `license`, `homepage`, raw `sha256`, ed25519 `signature`, and a top-level `signing_key`). One file therefore satisfies both an `agents.txt`/agentskills.io consumer (discovery + integrity) and a Tier-2 consumer (authenticity) — the publisher maintains no second artifact. The redundant `digest` (prefixed form) and `sha256` (raw hex) fields are kept in parallel so existing consumers that read raw `sha256` are not broken.
+
+### 3.3 Skills as the *recipe* layer over tool discovery
+
+A growing body of work attacks **tool-definition bloat** — the cost of injecting every tool's schema into the model context up front. It comes in two camps:
+
+- **Model/client-side.** Anthropic's [Tool Search Tool](https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool) (`defer_loading`) loads only the few relevant tools on demand (reported ~85% fewer tool-definition tokens). Tool-retrieval / "tool RAG" (LangChain toolkits, Gorilla) does the same via embeddings.
+- **Server-side.** The MCP [progressive-disclosure SEP](https://github.com/modelcontextprotocol/modelcontextprotocol/issues/1888) proposes a server capability that exposes one meta-tool with `searchTools` modes instead of registering hundreds.
+
+**This RFC is complementary, and sits at a third place: publisher-side, and one level up.** Two differences matter:
+
+1. **Search finds; a skill *prescribes*.** Tool search reduces the token cost of *having* many tools, but it does not tell the agent the *order* to use them in, the dependencies, or what to do on error — the agent must still formulate a query (a cold-start problem) and discover the procedure, sometimes by failing. A published skill carries the **recipe**: the procedure at the level of intent. (n8n's own MCP concedes this — it ships an `instructions` blob telling the agent the call order, because the tool list alone is insufficient.)
+2. **Trust + curation.** None of the above says *who* published a capability or verifies it; this RFC adds offline-key signatures + pinning (§4.6) and a human-curated procedure tier.
+
+So `llms.txt` Skills can be the **server-less catalog** these consumer-side mechanisms need a source for — Tool Search needs a catalog; the SEP needs the server to implement it; a `## Skills` section is that catalog, owned by the domain, with the recipe and the signature attached.
+
+**Evidence (reference POC, [`evals/poc_orchestration/`](../evals/poc_orchestration/README.md)).** Against a live n8n MCP server (which exposes **25 tools** to build a workflow), a small local model was driven through a real agentic loop in five arms spanning *how much capability sits in context as tool schemas vs. as skill prose*:
+
+| arm | tool defs in context | result |
+|---|---:|---|
+| raw MCP (n8n's own setup) | 25 | at a 4k context, the tools **do not even fit** (overflow before turn 1) |
+| skill + declared tool segment | 8 | runs; same task, −68% tool surface |
+| skill + 1 generic MCP passthrough | **1** | runs the full recipe, keeps node introspection |
+| skill + 1 generic HTTP tool (REST, no MCP) | **1** | builds and `POST`s the workflow in a single call |
+
+The same workflow gets built with **one tool definition in context instead of 25**. The decisive, model-independent result is the 4k overflow: the raw tool list is *unusable* on a small model, while a skill's declared segment is not. (Honest scoping: once the tools *fit*, the orchestration gap among the MCP arms is marginal on an easy task with a capable model; and the leanest REST arm trades the SDK's parameter validation for speed. It is a single-model POC, not a benchmark — see its README.)
+
+This is the same pattern already live on the reference site **[demoshop](https://demoshop-88e.pages.dev)**, whose skills (`product-search`, `cart-add`) teach an agent to call one REST endpoint directly — zero tools in context — for *simple* capabilities. The n8n POC shows the pattern **scales to a complex, tool-heavy capability**, and maps the cost of each rung.
 
 ---
 
@@ -392,6 +419,7 @@ The agent:
 
 ## 10. Changelog
 
+- **v0.7 (2026-06-02):** Added §3.3 "Skills as the recipe layer over tool discovery" positioning this RFC against tool-bloat work (Anthropic Tool Search / `defer_loading`, MCP progressive-disclosure SEP #1888, tool RAG) as the publisher-side, recipe-bearing layer those consumer/server-side mechanisms need a catalog for; added a reference POC (`evals/poc_orchestration/`) driving a live n8n MCP (25 tools) through five arms (25→1 tool defs in context), with demoshop as the simple-capability anchor.
 - **v0.6 (2026-06-02):** Added §3.2 "Relationship to `agents.txt` (the action layer)" positioning agents.txt as a complementary discovery layer and this RFC as the authenticity layer it omits; the reference generator now emits `/.well-known/agent-skills/index.json` as a superset of the agentskills.io `discovery/0.2.0` schema (`type` + `digest`) so one file serves both agents.txt/agentskills.io consumers and Tier-2 signature verifiers.
 - **v0.5 (2026-06-01):** Added §4.6 "Signing and authenticity" with a two-tier trust model (sha256 integrity + optional ed25519 signatures over an offline key, plus agent-side key pinning); resolved Open Question 4; added a reference signing implementation (`scripts/generate.py`, `scripts/verify_signatures.py`); added §3.1 "Relationship to adjacent protocols" positioning auth.md (WorkOS) as a complementary authentication layer.
 - **v0.4 (2026-05-19):** Added §1.4 "Why structured over prose" addressing the free-form equivalence objection; simplified §2.2 inline metadata to version-only hint, delegating sha256/license/cost to `.well-known/agent-skills/index.json`; resolved Open Question 5 with explicit layer table for `## Skills` vs `.well-known`; fixed duplicate §6 heading.
