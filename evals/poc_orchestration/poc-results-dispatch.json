@@ -1,0 +1,32 @@
+{
+  "model": "qwen/qwen3.5-9b",
+  "url": "https://ardf.dev/mcp-server/http",
+  "rows": [
+    {
+      "task": "schedule-slack",
+      "arm": "dispatch",
+      "tool_calls": 7,
+      "errors": 0,
+      "turns": 7,
+      "n_tools": 1,
+      "validate_attempts": 2,
+      "validate_ok": true,
+      "created_ids": [
+        "mFHPzUIJ8topcy9s"
+      ],
+      "success": true,
+      "tool_sequence": [
+        "get_sdk_reference",
+        "search_nodes",
+        "get_node_types",
+        "get_node_types",
+        "validate_workflow",
+        "validate_workflow",
+        "create_workflow_from_code"
+      ],
+      "fatal": null,
+      "recovered_calls": 4,
+      "wall_s": 323.4
+    }
+  ]
+}

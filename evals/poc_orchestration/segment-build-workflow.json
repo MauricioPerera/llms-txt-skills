@@ -1,0 +1,14 @@
+{
+  "comment": "The tool SEGMENT the published skill declares it needs. This is the 'segmented tools' idea from the design discussion: instead of the client carrying all 25 MCP tools, the skill tells it which subset matters, so only these are injected into the model context. Drops the 7 data-table tools, project/folder search, and lifecycle search that 'build a workflow' never needs.",
+  "segment": "build-workflow",
+  "tools": [
+    "get_sdk_reference",
+    "search_nodes",
+    "get_suggested_nodes",
+    "get_node_types",
+    "validate_workflow",
+    "create_workflow_from_code",
+    "publish_workflow",
+    "execute_workflow"
+  ]
+}

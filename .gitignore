@@ -13,3 +13,8 @@ node_modules/
 *.pem
 *-private-key*
 signing-key*.key
+
+# Bearer tokens / secrets para los evals (p. ej. el MCP de n8n): NUNCA commitear.
+.n8n_token
+.n8n_api_key
+*.token
