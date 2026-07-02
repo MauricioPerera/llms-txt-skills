@@ -1,6 +1,6 @@
 # Extension: Executable Skills
 
-**Status:** Draft (v0.1)
+**Status:** Draft (v0.2)
 **Date:** 2026-07-02
 **Extends:** [RFC: Publishing Agent Skills through `llms.txt`](./rfc-skills-in-llms-txt.md) (v0.8)
 
@@ -26,16 +26,18 @@ Everything else — transport, agent UX, approval flows — remains governed by 
 An executable skill is declared with two additional keys in the skill entry's JSON comment:
 
 ```markdown
-- [sum_numbers](/skills/sum_numbers/SKILL.md): Sum two numbers a and b. <!-- skill: {"version":"1.0.0","tool":"/skills/sum_numbers/tool.js","sha256":"58daf86111bf7278446eb7e0e8c6384713b50cdb6fa97ac039e23846d723dc3e"} -->
+- [sum_numbers](/skills/sum_numbers/SKILL.md): Sum two numbers a and b. <!-- skill: {"version":"1.0.0","tool":"/skills/sum_numbers/tool.js","tool_sha256":"58daf86111bf7278446eb7e0e8c6384713b50cdb6fa97ac039e23846d723dc3e"} -->
 ```
 
 | Key      | Type   | Requirement | Meaning |
 |----------|--------|-------------|---------|
 | `version`| string | inherited from core RFC | Human-readable hint. |
 | `tool`   | string | REQUIRED for executable skills | Path to the executable artifact. MUST be a same-origin path (relative or absolute path, never a full URL to another origin). |
-| `sha256` | string | REQUIRED when `tool` is present | Lowercase hex SHA-256 of the exact bytes served at `tool`. |
+| `tool_sha256` | string | REQUIRED when `tool` is present | Lowercase hex SHA-256 of the exact bytes served at `tool`. |
 
-Rationale for staying inline (rather than only in `/.well-known/agent-skills/index.json`): the core standard's value proposition is *one static file, no infrastructure*. Two inline keys preserve that. Publishers who already maintain the well-known index MAY mirror the same `tool`/`sha256` fields there; if both are present and disagree, runtimes MUST refuse the skill.
+The key is deliberately **not** `sha256`: the core RFC already uses `sha256` (inline and in `/.well-known/agent-skills/index.json`) for the hash of the fetched `SKILL.md`. The two keys MAY appear on the same skill line and verify different files; runtimes MUST NOT conflate them.
+
+Rationale for staying inline (rather than only in `/.well-known/agent-skills/index.json`): the core standard's value proposition is *one static file, no infrastructure*. Two inline keys preserve that. Publishers who already maintain the well-known index MAY mirror the same `tool`/`tool_sha256` fields there; if both are present and disagree, runtimes MUST refuse the skill.
 
 ### 2.2 The artifact (`tool.js`)
 
@@ -62,13 +64,13 @@ Contract:
 
 ### 2.3 Versioning and updates
 
-The `sha256` pins the artifact. Publishing a new artifact version means serving new bytes at `tool` and updating both `sha256` and `version` in `llms.txt`. Runtimes cache by hash; a stale hash simply keeps serving the old, verified artifact until the index updates.
+The `tool_sha256` pins the artifact. Publishing a new artifact version means serving new bytes at `tool` and updating both `tool_sha256` and `version` in `llms.txt`. Runtimes cache by hash; a stale hash simply keeps serving the old, verified artifact until the index updates.
 
 ## 3. Runtime requirements
 
 A runtime that executes skills published under this extension (a *gateway*, an agent-embedded engine, etc.):
 
-1. **Integrity.** MUST fetch the artifact, compute SHA-256 over the exact received bytes, and compare with the declared `sha256`. On mismatch the skill MUST be excluded (not degraded to prose, not executed) and the rejection SHOULD be observable (log or diagnostic surface). This matches the mandatory-refusal language of core RFC §4.
+1. **Integrity.** MUST fetch the artifact, compute SHA-256 over the exact received bytes, and compare with the declared `tool_sha256`. On mismatch the skill MUST be excluded (not degraded to prose, not executed) and the rejection SHOULD be observable (log or diagnostic surface). This matches the mandatory-refusal language of core RFC §4.
 2. **Isolation.** MUST execute artifacts in a sandbox where the host environment is not reachable: no ambient network, no filesystem, no host secrets. Host capabilities are injected explicitly; this extension defines only `host.fetchOrigin`, scoped to the publishing origin. A runtime MUST reject any `fetchOrigin` target that resolves outside that origin.
 3. **Resource limits.** SHOULD enforce memory, stack, and execution-time budgets per invocation, so a hostile or buggy artifact cannot exhaust the runtime. (Reference implementation values: 64 MB memory, 1 MB stack, 2 s CPU deadline.)
 4. **Trust domain.** Artifacts from the *same origin* MAY share an execution context; artifacts from *different origins* MUST NOT. Runtimes SHOULD isolate per skill even within one origin (defense in depth).
@@ -76,7 +78,7 @@ A runtime that executes skills published under this extension (a *gateway*, an a
 
 ## 4. Security considerations
 
-- **What the hash buys:** whoever can edit the site cannot silently swap artifact bytes out from under a cached/pinned hash; and a runtime never executes bytes it did not verify. It does **not** authenticate the publisher — for that, compose with the signature scheme of core RFC §4.6 (signing `llms.txt` transitively pins every declared `sha256`).
+- **What the hash buys:** whoever can edit the site cannot silently swap artifact bytes out from under a cached/pinned hash; and a runtime never executes bytes it did not verify. It does **not** authenticate the publisher — for that, compose with the signature scheme of core RFC §4.6 (signing `llms.txt` transitively pins every declared `tool_sha256`, alongside the core RFC's `sha256` for the prose).
 - **What the sandbox buys:** a malicious artifact can, at worst, compute and call its own origin — the same things any visitor's browser can already do to that origin. It cannot reach the runtime's credentials, other tenants, or other origins.
 - **Residual risks:** a compromised publisher origin can still publish a *correctly hashed* malicious artifact (garbage in, verified garbage out); `fetchOrigin` responses are attacker-controlled input to the artifact; and resource limits bound, but do not eliminate, denial-of-service pressure on the runtime. Cross-origin user confirmation rules from core RFC §4 apply unchanged.
 
@@ -94,11 +96,12 @@ The gateway demonstrates: discovery from `llms.txt`, per-skill SHA-256 verificat
 
 ## 6. Open questions
 
-1. Should `tool`/`sha256` live only in `/.well-known/agent-skills/index.json` instead of inline, keeping the inline comment single-key? (This draft chooses inline for zero-infrastructure parity; feedback welcome.)
+1. Should `tool`/`tool_sha256` live only in `/.well-known/agent-skills/index.json` instead of inline, keeping the inline comment single-key? (This draft chooses inline for zero-infrastructure parity; feedback welcome.)
 2. Artifact size limit (the reference implementation truncates fetched bodies at 4 KB for `fetchOrigin` but does not yet cap artifact size).
 3. A declared capability list per skill (e.g. `"capabilities":["fetchOrigin"]`) so runtimes can surface least-privilege prompts before loading.
 4. WASM artifacts as a second artifact type (`tool.wasm` + WIT-style interface) for non-JS publishers.
 
 ## 7. Changelog
 
+- **v0.2 (2026-07-02):** Rename `sha256` -> `tool_sha256` to avoid collision with the core RFC's `sha256` (hash of the fetched `SKILL.md`), per review feedback.
 - **v0.1 (2026-07-02):** Initial draft, extracted from the mcpwasm reference implementation.
