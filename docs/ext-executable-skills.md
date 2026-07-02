@@ -1,6 +1,6 @@
 # Extension: Executable Skills
 
-**Status:** Draft (v0.2)
+**Status:** Draft (v0.3)
 **Date:** 2026-07-02
 **Extends:** [RFC: Publishing Agent Skills through `llms.txt`](./rfc-skills-in-llms-txt.md) (v0.8)
 
@@ -59,8 +59,9 @@ Contract:
 
 - The file MUST call `registerTool(def)` exactly once, where `def.name` matches the skill name in `llms.txt`, `def.inputSchema` is a JSON Schema object, and `def.handler` is a function (sync or async).
 - The handler receives already-parsed `args` and returns a JSON-serializable value. Throwing reports a tool error to the caller; it MUST NOT crash the runtime.
-- The only ambient capability available is `host.fetchOrigin(path)`: an HTTP fetch **restricted to the publishing origin**, returning `{ status, body }` (body as text, possibly truncated by the runtime). There is no other network, filesystem, timer, or environment access.
+- The only ambient capability available is `host.fetchOrigin(path, opts?)`: an HTTP fetch **restricted to the publishing origin**, returning `{ status, body }` (body as text, possibly truncated by the runtime). `opts` is optional: `{ method?: "GET" | "POST", body?: string, contentType?: string }`. Only `GET` and `POST` are valid (any other method MUST throw); the request body is a string capped by the runtime (reference implementation: 16 KB); `contentType` is the only controllable header (default `application/json` when a body is present). There is no other network, filesystem, timer, or environment access.
 - The artifact MUST NOT rely on any global other than `registerTool`, `host`, and standard ECMAScript built-ins. No `fetch`, no `process`, no dynamic import.
+- **ECMAScript means ECMAScript.** Web/WHATWG APIs that feel universal do NOT exist in the sandbox: no `URLSearchParams`, no `URL`, no `TextEncoder`/`TextDecoder`, no `atob`/`btoa`, no timers. Build query strings with `encodeURIComponent` by hand. (Field-tested: a published skill using `URLSearchParams` passes hash verification and loads, then fails at call time.)
 
 ### 2.3 Versioning and updates
 
@@ -72,9 +73,9 @@ A runtime that executes skills published under this extension (a *gateway*, an a
 
 1. **Integrity.** MUST fetch the artifact, compute SHA-256 over the exact received bytes, and compare with the declared `tool_sha256`. On mismatch the skill MUST be excluded (not degraded to prose, not executed) and the rejection SHOULD be observable (log or diagnostic surface). This matches the mandatory-refusal language of core RFC §4.
 2. **Isolation.** MUST execute artifacts in a sandbox where the host environment is not reachable: no ambient network, no filesystem, no host secrets. Host capabilities are injected explicitly; this extension defines only `host.fetchOrigin`, scoped to the publishing origin. A runtime MUST reject any `fetchOrigin` target that resolves outside that origin.
-3. **Resource limits.** SHOULD enforce memory, stack, and execution-time budgets per invocation, so a hostile or buggy artifact cannot exhaust the runtime. (Reference implementation values: 64 MB memory, 1 MB stack, 2 s CPU deadline.)
+3. **Resource limits.** SHOULD enforce memory, stack, and execution budgets per invocation, so a hostile or buggy artifact cannot exhaust the runtime. Execution budgets SHOULD be **deterministic** (e.g. counting interrupt-callback invocations), not wall-clock: platforms that freeze the clock during synchronous execution (Cloudflare Workers freezes `Date.now()` as a Spectre mitigation) make wall-clock deadlines silently inert against `while(true)` — field-tested: a wall-clock 2 s deadline never fired and the platform killed the request at ~40 s. (Reference implementation values: 64 MB memory, 1 MB stack, interrupt-count gas budget that cuts an infinite loop in a few seconds.)
 4. **Trust domain.** Artifacts from the *same origin* MAY share an execution context; artifacts from *different origins* MUST NOT. Runtimes SHOULD isolate per skill even within one origin (defense in depth).
-5. **Exposure.** How verified skills are exposed to agents is out of scope. The reference implementation exposes them as an MCP server (`tools/list` / `tools/call`), which requires no agent-side changes at all — but any interface satisfying 1–4 conforms.
+5. **Exposure.** How verified skills are exposed to agents is out of scope. The reference implementation exposes them as an MCP server (`tools/list` / `tools/call`), which requires no agent-side changes at all — but any interface satisfying 1–4 conforms. Runtimes exposing skills over MCP MUST return `structuredContent` as an object per the MCP spec: when a handler returns an array or a primitive, wrap it (reference implementation: `{ "result": <value> }`). Field-tested: unwrapped arrays pass curl inspection but are rejected by conformant client SDKs (`invalid_type`), making the tool unusable in practice.
 
 ## 4. Security considerations
 
@@ -90,9 +91,10 @@ Working end-to-end chain (all deployed):
 |---|---|
 | Runtime + gateway source (QuickJS-wasm sandbox on Cloudflare Workers) | https://github.com/MauricioPerera/mcpwasm |
 | Demo publishing site (`llms.txt` with two executable skills) | https://llmstxt-demo-site.rckflr.workers.dev/llms.txt |
-| Gateway exposing them as an MCP server | `POST https://llmstxt-gateway.rckflr.workers.dev/mcp?origin=https%3A%2F%2Fllmstxt-demo-site.rckflr.workers.dev` |
+| Realistic publisher (D1-backed bookstore: search/detail/stock/**order** skills, plus permanent robustness fixtures: a deliberately hash-mismatched skill and an infinite-loop skill) | https://llmstxt-bookstore.rckflr.workers.dev/llms.txt |
+| Gateway exposing them as an MCP server | `POST https://llmstxt-gateway.rckflr.workers.dev/mcp?origin=<url-encoded origin>` |
 
-The gateway demonstrates: discovery from `llms.txt`, per-skill SHA-256 verification with exclusion on mismatch, sandboxed execution (QuickJS-wasm) with async handlers, origin-scoped `fetchOrigin`, and the resource limits cited in §3.
+The gateway demonstrates: discovery from `llms.txt`, per-skill SHA-256 verification with exclusion on mismatch, sandboxed execution (QuickJS-wasm) with async handlers in per-skill contexts, origin-scoped `fetchOrigin` including POST write skills (a real order decrementing D1 stock), deterministic gas interruption of infinite loops, and end-to-end consumption by an unmodified MCP client (headless Claude configured with only the gateway URL).
 
 ## 6. Open questions
 
@@ -103,5 +105,6 @@ The gateway demonstrates: discovery from `llms.txt`, per-skill SHA-256 verificat
 
 ## 7. Changelog
 
+- **v0.3 (2026-07-02):** Lessons from a realistic field test (D1-backed bookstore + unmodified MCP client): explicit sandbox-globals note (ECMAScript only, no WHATWG APIs); `fetchOrigin` extended with optional `{method, body, contentType}` (GET/POST only) enabling write skills; resource budgets SHOULD be deterministic gas, not wall-clock (frozen clocks in Workers); MCP exposure MUST wrap non-object results in `structuredContent`.
 - **v0.2 (2026-07-02):** Rename `sha256` -> `tool_sha256` to avoid collision with the core RFC's `sha256` (hash of the fetched `SKILL.md`), per review feedback.
 - **v0.1 (2026-07-02):** Initial draft, extracted from the mcpwasm reference implementation.
