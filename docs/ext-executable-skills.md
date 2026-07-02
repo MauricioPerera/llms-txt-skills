@@ -12,6 +12,8 @@ The core RFC publishes skills as instructional documents (`SKILL.md`). Section 5
 
 This extension closes that gap for publishers who want it: a skill MAY additionally ship an **executable artifact** — a small JavaScript file with a declared input schema — that a conforming runtime executes *verbatim* inside a sandbox, instead of asking a model to improvise from prose.
 
+The result is **Static MCP** — *your tools are files, not servers*: skills published as static, hash-verified content and executed sandboxed on demand. What static site hosting did to web servers ("do not run Apache, publish HTML"), this does to MCP servers: the publisher runs no infrastructure at all; the MCP server is materialized per request from the published files and evaporates after responding (ephemeral instance, durable definition).
+
 Executing third-party code is only acceptable under a strict security model. This extension therefore defines two things, and only two things:
 
 1. The **publication format** for executable skills (publisher side).
