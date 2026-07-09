@@ -100,10 +100,12 @@
   );
   document.querySelectorAll(".reveal").forEach((el) => revealObserver.observe(el));
 
-  const diagram = document.getElementById("arch-svg");
-  if (diagram) {
+  const STEP_DELAY_MS = 260;
+  // Animate the numbered steps of every diagram (the how-it-works #arch-svg and
+  // the spec⇄runtime #bridge-svg), each independently as it scrolls into view.
+  document.querySelectorAll("#arch-svg, #bridge-svg").forEach((diagram) => {
     const steps = Array.from(diagram.querySelectorAll(".step"));
-    const STEP_DELAY_MS = 260;
+    if (!steps.length) return;
 
     const diagramObserver = new IntersectionObserver(
       (entries, obs) => {
@@ -119,5 +121,5 @@
       { threshold: 0.2 }
     );
     diagramObserver.observe(diagram);
-  }
+  });
 })();
