@@ -348,7 +348,7 @@
       "quickstart.sub3": "3. Ou instale a skill consumidora (Claude Code)",
       "quickstart.disclaimer__html": "O gerador (<code>scripts/generate.py</code>) calcula o sha256, sincroniza <code>.well-known</code>, e assina — então isso nunca precisa ser feito manualmente. Guia completo no <a href=\"https://github.com/MauricioPerera/llms-txt-skills#readme\">README</a>.",
 
-      "bridge.h2": "De um site estático a um servidor MCP ao vivo",
+      "bridge.h2": "De um site estático a um servidor MCP ativo",
       "bridge.lede__html": "<a href=\"https://github.com/MauricioPerera/llms-txt-skills\">llms-txt-skills</a> é o <strong>formato</strong>; <a href=\"https://github.com/MauricioPerera/mcpwasm\">mcpwasm</a> é um <strong>runtime</strong> para ele. Um publicador serve uma vez suas skills fixadas por hash e atestadas, da forma padrão — o runtime as descobre, verifica e executa cada uma como uma ferramenta MCP. Todo o contrato entre os dois é um <code>tool_sha256</code> e sua atestação.",
       "bridge.svgTitle": "Um site publicador estático serve skills de llms.txt e tool.js; o mcpwasm os baixa e verifica, e então expõe cada um como uma ferramenta MCP que um cliente pode chamar, executando o tool.js isolado.",
       "bridge.boxSiteTitle": "Site estático",
