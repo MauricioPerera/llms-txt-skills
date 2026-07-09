@@ -6,7 +6,7 @@
 set -euo pipefail
 
 PROJECT_NAME="${1:-llms-txt-skills}"
-BRANCH="${2:-main}"
+BRANCH="${2:-$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo main)}"
 
 echo "🚀 Desplegando a Cloudflare Pages..."
 echo "   Proyecto: $PROJECT_NAME"
