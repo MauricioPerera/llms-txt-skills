@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>llms.txt Skills — teach any agent how to use your site, no server required</title>
+<meta name="description" content="Add a `## Skills` section to your llms.txt and any agent that already reads it discovers, verifies, and uses your published Agent Skills. Zero infrastructure, sha256 + ed25519 verified.">
+<meta property="og:title" content="llms.txt Skills">
+<meta property="og:description" content="Teach any agent how to use your site. No server required.">
+<meta property="og:type" content="website">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<main>
+
+  <!-- ============ HERO ============ -->
+  <section id="hero" class="section hero">
+    <div class="wrap">
+      <div class="badges">
+        <a href="https://github.com/MauricioPerera/llms-txt-skills/actions/workflows/validate.yml"><img alt="CI" src="https://github.com/MauricioPerera/llms-txt-skills/actions/workflows/validate.yml/badge.svg"></a>
+        <a href="https://github.com/MauricioPerera/llms-txt-skills/blob/master/LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-3ee7d0"></a>
+      </div>
+      <h1 data-i18n="hero.h1">Teach any agent how to use your site. No server required.</h1>
+      <p class="lede" data-i18n="hero.lede">
+        llms.txt already tells agents WHAT your site is. This adds a standard
+        way to say HOW to use it: a `## Skills` section pointing at your
+        SKILL.md files — discovered, verified, and used with explicit opt-in.
+      </p>
+      <div class="code-block hero-cta">
+        <div class="code-head">
+          <span>llms.txt</span>
+          <button class="copy-btn" type="button" data-i18n="common.copy">Copy</button>
+        </div>
+        <pre><code><span class="tok-kw">## Skills</span>
+
+- [placeholder](/skills/placeholder/SKILL.md): <span class="tok-str">generate SVG placeholder image URLs for UI mockups.</span> &lt;!-- skill: {"version":"1.0.0","license":"MIT"} --&gt;</code></pre>
+      </div>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#how-it-works" data-i18n="hero.ctaTry">See the format</a>
+        <a class="btn" href="https://github.com/MauricioPerera/llms-txt-skills" data-i18n="hero.ctaGithub">View on GitHub</a>
+        <a class="btn" href="https://github.com/MauricioPerera/llms-txt-skills/blob/master/docs/rfc-skills-in-llms-txt.md" data-i18n="hero.ctaRfc">Read the RFC</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ THE PROBLEM ============ -->
+  <section id="problem" class="section reveal">
+    <div class="wrap">
+      <h2 data-i18n="problem.h2">Two ecosystems that don't talk to each other</h2>
+      <p class="section-lede" data-i18n="problem.lede">
+        llms.txt tells an agent what your site is. Agent Skills (SKILL.md)
+        tell it how to use it. Today there is no standard way for a site to
+        say "here is the skill for working with me" — so an agent that reads
+        your llms.txt has no signal a skill even exists.
+      </p>
+      <div class="contrast">
+        <div class="contrast-col">
+          <h3 data-i18n="problem.typicalH3">Without this standard</h3>
+          <ul>
+            <li data-i18n="problem.typicalLi1">Agent reads llms.txt, sees prose about your API</li>
+            <li data-i18n="problem.typicalLi2">No signal that a SKILL.md exists or where</li>
+            <li data-i18n="problem.typicalLi3">Agent invents a generic call and gets it wrong</li>
+          </ul>
+        </div>
+        <div class="contrast-col contrast-col--accent">
+          <h3>## Skills in llms.txt</h3>
+          <ul>
+            <li data-i18n="problem.newLi1">One `## Skills` section, same llms.txt fetch</li>
+            <li data-i18n="problem.newLi2">Agent discovers title, description, and URL</li>
+            <li data-i18n="problem.newLi3">Verified by sha256 (and ed25519 if signed), then used</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <section id="how-it-works" class="section reveal">
+    <div class="wrap">
+      <h2 data-i18n="how.h2">How it works</h2>
+      <p class="section-lede" data-i18n="how.lede">Four steps. The user's opt-in is never skipped.</p>
+
+      <div class="diagram-wrap">
+        <svg id="arch-svg" viewBox="0 0 820 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="arch-title">
+          <title id="arch-title" data-i18n="how.svgTitle">A publisher's llms.txt lists ## Skills; the agent shows them to the user, the user opts in, and the agent fetches and verifies the SKILL.md before using it.</title>
+
+          <!-- static frame: three boxes -->
+          <g class="node">
+            <rect x="20" y="154" width="220" height="92" rx="12" class="box"/>
+            <text x="130" y="188" class="box-title" text-anchor="middle" data-i18n="how.boxPublisherTitle">Publisher site</text>
+            <text x="130" y="210" class="box-sub" text-anchor="middle" data-i18n="how.boxPublisherSub1">static: GitHub Pages, R2, any host</text>
+            <text x="130" y="227" class="box-sub" text-anchor="middle" data-i18n="how.boxPublisherSub2">serves /llms.txt + /skills/*/SKILL.md</text>
+          </g>
+
+          <g class="node">
+            <rect x="300" y="154" width="220" height="92" rx="12" class="box box--accent"/>
+            <text x="410" y="188" class="box-title" text-anchor="middle" data-i18n="how.boxAgentTitle">Agent</text>
+            <text x="410" y="210" class="box-sub" text-anchor="middle" data-i18n="how.boxAgentSub1">Claude, Cursor, any MCP-aware runtime</text>
+            <text x="410" y="227" class="box-sub" text-anchor="middle" data-i18n="how.boxAgentSub2">parses ## Skills, verifies sha256</text>
+          </g>
+
+          <g class="node">
+            <rect x="580" y="154" width="220" height="92" rx="12" class="box"/>
+            <text x="690" y="188" class="box-title" text-anchor="middle" data-i18n="how.boxUserTitle">User</text>
+            <text x="690" y="210" class="box-sub" text-anchor="middle" data-i18n="how.boxUserSub1">sees the skill list</text>
+            <text x="690" y="227" class="box-sub" text-anchor="middle" data-i18n="how.boxUserSub2">opt-in is mandatory, never automatic</text>
+          </g>
+
+          <!-- step 1: publisher -> agent (llms.txt + ## Skills) -->
+          <g class="step" data-step="1">
+            <path d="M 200 160 C 250 110, 290 110, 340 160" class="arrow" marker-end="url(#arrowhead)"/>
+            <circle cx="270" cy="128" r="11" class="step-badge"/>
+            <text x="270" y="132" class="step-num" text-anchor="middle">1</text>
+            <text x="270" y="104" class="step-caption" text-anchor="middle" data-i18n="how.step1">llms.txt + ## Skills</text>
+          </g>
+
+          <!-- step 2: agent -> user (list skills, ask opt-in) -->
+          <g class="step" data-step="2">
+            <path d="M 480 160 C 530 110, 570 110, 620 160" class="arrow" marker-end="url(#arrowhead)"/>
+            <circle cx="550" cy="128" r="11" class="step-badge"/>
+            <text x="550" y="132" class="step-num" text-anchor="middle">2</text>
+            <text x="550" y="104" class="step-caption" text-anchor="middle" data-i18n="how.step2">list skills, ask opt-in</text>
+          </g>
+
+          <!-- step 3: user -> agent (approve, dashed = response) -->
+          <g class="step" data-step="3">
+            <path d="M 620 240 C 570 290, 530 290, 480 240" class="arrow arrow--dashed" marker-end="url(#arrowhead)"/>
+            <circle cx="550" cy="272" r="11" class="step-badge step-badge--dashed"/>
+            <text x="550" y="276" class="step-num" text-anchor="middle">3</text>
+            <text x="550" y="300" class="step-caption" text-anchor="middle" data-i18n="how.step3">approve</text>
+          </g>
+
+          <!-- step 4: agent -> publisher (fetch + verify SKILL.md, dashed) -->
+          <g class="step" data-step="4">
+            <path d="M 340 240 C 290 290, 250 290, 200 240" class="arrow arrow--dashed" marker-end="url(#arrowhead)"/>
+            <circle cx="270" cy="272" r="11" class="step-badge step-badge--dashed"/>
+            <text x="270" y="276" class="step-num" text-anchor="middle">4</text>
+            <text x="270" y="300" class="step-caption" text-anchor="middle" data-i18n="how.step4">fetch + verify SKILL.md</text>
+          </g>
+
+          <defs>
+            <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" class="arrowhead-fill"/>
+            </marker>
+          </defs>
+        </svg>
+
+        <ol class="diagram-steps-text">
+          <li data-i18n="how.list1__html">A publisher adds a <code>## Skills</code> section to the <code>llms.txt</code> it already serves — one line of markdown per skill.</li>
+          <li data-i18n="how.list2__html">An agent that reads <code>llms.txt</code> now sees the skills available and lists them to the user.</li>
+          <li data-i18n="how.list3__html">The user opts in explicitly. Agents MUST NOT auto-install a skill.</li>
+          <li data-i18n="how.list4__html">The agent fetches the <code>SKILL.md</code>, verifies its <code>sha256</code> (and <code>ed25519</code> signature if declared), then loads it as context.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ THREE WAYS TO USE IT ============ -->
+  <section id="ways-to-use" class="section reveal">
+    <div class="wrap">
+      <h2 data-i18n="ways.h2">Three ways to consume it today</h2>
+      <p class="section-lede" data-i18n="ways.lede">All three are real and working, not roadmap.</p>
+
+      <div class="cards cards-3">
+        <article class="card card--accent">
+          <h3>Claude Code plugin <span class="tag" data-i18n="ways.pluginTag">recommended</span></h3>
+          <p data-i18n="ways.pluginP">Install the llms-txt-aware consumer skill as a Claude Code plugin. It activates automatically whenever you're about to touch a web domain.</p>
+          <div class="code-block">
+            <div class="code-head"><span>claude code</span><button class="copy-btn" type="button" data-i18n="common.copy">Copy</button></div>
+            <pre><code><span class="tok-kw">/plugin</span> marketplace add MauricioPerera/llms-txt-skills
+<span class="tok-kw">/plugin</span> install llms-txt-aware@llms-txt-skills</code></pre>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>MCP server <span class="tag" data-i18n="ways.mcpTag">any MCP runtime</span></h3>
+          <p data-i18n="ways.mcpP">A standalone MCP server exposing discover/fetch/verify as tools — for Cline, Continue, Cursor, Windsurf, or any MCP client.</p>
+          <div class="code-block">
+            <div class="code-head"><span>json</span><button class="copy-btn" type="button" data-i18n="common.copy">Copy</button></div>
+            <pre><code>{
+  <span class="tok-str">"mcpServers"</span>: {
+    <span class="tok-str">"llmstxt"</span>: {
+      <span class="tok-str">"command"</span>: <span class="tok-str">"python"</span>,
+      <span class="tok-str">"args"</span>: [<span class="tok-str">"integrations/mcp/llms_txt_skills_mcp.py"</span>]
+    }
+  }
+}</code></pre>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>System prompt <span class="tag" data-i18n="ways.promptTag">any agent</span></h3>
+          <p data-i18n="ways.promptP">Copy the 6-step procedure into your agent's system prompt. No plugin system required, works with any model that follows instructions.</p>
+          <div class="code-block">
+            <div class="code-head"><span>skill</span><button class="copy-btn" type="button" data-i18n="common.copy">Copy</button></div>
+            <pre><code><span class="tok-kw">cat</span> skills/llms-txt-aware/SKILL.md</code></pre>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TRUST MODEL ============ -->
+  <section id="trust" class="section reveal">
+    <div class="wrap">
+      <h2 data-i18n="trust.h2">Two rings of trust</h2>
+      <p class="section-lede" data-i18n="trust.lede">sha256 alone proves integrity, not authenticity — the same document that points to a skill also asserts its hash. Signing closes that gap.</p>
+
+      <div class="cards cards-3">
+        <article class="card">
+          <div class="ring-num">01</div>
+          <h3 data-i18n="trust.card1H3">Integrity — sha256</h3>
+          <p data-i18n="trust.card1P__html">Declared inline in <code>## Skills</code> and in <code>/.well-known/agent-skills/index.json</code>. Agents MUST verify it and refuse to load on mismatch.</p>
+        </article>
+        <article class="card">
+          <div class="ring-num">02</div>
+          <h3 data-i18n="trust.card2H3">Authenticity — ed25519 + key pinning</h3>
+          <p data-i18n="trust.card2P__html">The publisher signs each <code>SKILL.md</code> with a key kept offline. Agents pin the key per origin (TOFU) and flag a silent change across sessions.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ EVIDENCE ============ -->
+  <section id="evidence" class="section reveal">
+    <div class="wrap">
+      <h2 data-i18n="evidence.h2">Does publishing a skill change what an agent does?</h2>
+      <p class="section-lede" data-i18n="evidence.lede">Measured, not asserted — 6 local models, 7 scenarios, 3 reference sites.</p>
+
+      <div class="cards cards-4 stat-cards">
+        <div class="stat-card">
+          <div class="stat-value" data-count-to="5" data-suffix="%">0%</div>
+          <div class="stat-label" data-i18n="evidence.stat1Label">baseline: uses the real endpoint</div>
+          <div class="stat-sub" data-i18n="evidence.stat1Sub">given only the task, models mostly invent a local fallback</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" data-count-to="79" data-suffix="%">0%</div>
+          <div class="stat-label" data-i18n="evidence.stat2Label">discovery: uses the real endpoint</div>
+          <div class="stat-sub" data-i18n="evidence.stat2Sub">given the site's llms.txt + SKILL.md, most get it right</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" data-count-to="6">0</div>
+          <div class="stat-label" data-i18n="evidence.stat3Label">models tested locally</div>
+          <div class="stat-sub" data-i18n="evidence.stat3Sub">0.5B to 9B parameters, via LM Studio</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" data-count-to="21">0</div>
+          <div class="stat-label" data-i18n="evidence.stat4Label">scenarios × sites</div>
+          <div class="stat-sub" data-i18n="evidence.stat4Sub">image API, storefront, wireframe validator</div>
+        </div>
+      </div>
+      <p class="disclaimer" data-i18n="evidence.disclaimer__html">
+        Small-N proof of mechanism, not a benchmark — all 3 sites are
+        first-party. Full methodology, caveats, and raw data in
+        <a href="https://github.com/MauricioPerera/llms-txt-skills/blob/master/evals/results.md">evals/results.md</a>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ COMPARISON ============ -->
+  <section id="compare" class="section reveal">
+    <div class="wrap">
+      <h2 data-i18n="compare.h2">Where this fits</h2>
+      <p class="section-lede" data-i18n="compare.lede">This does not replace MCP or A2A — it fills the gap below them: publishing a skill for a simple API or static site, with no server to run.</p>
+
+      <div class="compare-wrap">
+        <table class="compare">
+          <thead>
+            <tr>
+              <th></th>
+              <th>MCP</th>
+              <th>A2A</th>
+              <th>/.well-known/skills/</th>
+              <th>## Skills in llms.txt</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td data-i18n="compare.rowServer">Requires a running server</td>
+              <td data-i18n="compare.yes">Yes</td>
+              <td data-i18n="compare.yes">Yes</td>
+              <td class="win" data-i18n="compare.no">No</td>
+              <td class="win" data-i18n="compare.no">No</td>
+            </tr>
+            <tr>
+              <td data-i18n="compare.rowStatic">Works on static sites</td>
+              <td data-i18n="compare.no">No</td>
+              <td data-i18n="compare.no">No</td>
+              <td class="win" data-i18n="compare.yes">Yes</td>
+              <td class="win" data-i18n="compare.yes">Yes</td>
+            </tr>
+            <tr>
+              <td data-i18n="compare.rowMulti">Multiple skills per domain</td>
+              <td data-i18n="compare.yes">Yes</td>
+              <td data-i18n="compare.yes">Yes</td>
+              <td data-i18n="compare.oneOnly">No (one only)</td>
+              <td class="win" data-i18n="compare.yes">Yes</td>
+            </tr>
+            <tr>
+              <td data-i18n="compare.rowColocated">Co-located with llms.txt</td>
+              <td data-i18n="compare.no">No</td>
+              <td data-i18n="compare.no">No</td>
+              <td data-i18n="compare.no">No</td>
+              <td class="win" data-i18n="compare.yes">Yes</td>
+            </tr>
+            <tr>
+              <td data-i18n="compare.rowComplexity">Implementation complexity</td>
+              <td data-i18n="compare.high">High</td>
+              <td data-i18n="compare.high">High</td>
+              <td data-i18n="compare.low">Low</td>
+              <td class="win" data-i18n="compare.low">Low</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ QUICK START ============ -->
+  <section id="quickstart" class="section reveal">
+    <div class="wrap">
+      <h2 data-i18n="quickstart.h2">Adopt it in 3 steps</h2>
+
+      <h3 class="qs-sub" data-i18n="quickstart.sub1">1. Add the section to your llms.txt</h3>
+      <div class="code-block">
+        <div class="code-head"><span>markdown</span><button class="copy-btn" type="button" data-i18n="common.copy">Copy</button></div>
+        <pre><code><span class="tok-kw">## Skills</span>
+
+- [mi-skill](/skills/mi-skill/SKILL.md): <span class="tok-str">qué hace esta skill y cuándo usarla.</span> &lt;!-- skill: {"version":"1.0.0","license":"MIT"} --&gt;</code></pre>
+      </div>
+
+      <h3 class="qs-sub" data-i18n="quickstart.sub2">2. Write the SKILL.md</h3>
+      <div class="code-block">
+        <div class="code-head"><span>yaml</span><button class="copy-btn" type="button" data-i18n="common.copy">Copy</button></div>
+        <pre><code>---
+name: mi-skill
+description: <span class="tok-str">Qué hace esta skill y cuándo usarla.</span>
+version: 1.0.0
+license: MIT
+---
+
+Instrucciones detalladas para el agente.</code></pre>
+      </div>
+
+      <h3 class="qs-sub" data-i18n="quickstart.sub3">3. Or install the consumer skill (Claude Code)</h3>
+      <div class="code-block">
+        <div class="code-head"><span>claude code</span><button class="copy-btn" type="button" data-i18n="common.copy">Copy</button></div>
+        <pre><code><span class="tok-kw">/plugin</span> marketplace add MauricioPerera/llms-txt-skills
+<span class="tok-kw">/plugin</span> install llms-txt-aware@llms-txt-skills</code></pre>
+      </div>
+      <p class="disclaimer" data-i18n="quickstart.disclaimer__html">
+        The generator (<code>scripts/generate.py</code>) computes the sha256,
+        syncs <code>.well-known</code>, and signs — so this never has to be
+        done by hand. Full guide in the
+        <a href="https://github.com/MauricioPerera/llms-txt-skills#readme">README</a>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ ECOSYSTEM ============ -->
+  <section id="ecosystem" class="section reveal">
+    <div class="wrap">
+      <h2 data-i18n="ecosystem.h2">Part of a growing spec</h2>
+      <p class="section-lede" data-i18n="ecosystem.lede__html">
+        This RFC (v0.8) has two provisional extensions: <strong>Executable
+        Skills</strong>, sandboxed <code>tool.js</code> a runtime executes
+        verbatim instead of asking a model to improvise, and <strong>Skill
+        Attestations</strong>, signed human review with an expiry window.
+        Both are field-tested end-to-end in
+        <a href="https://github.com/MauricioPerera/mcpwasm">mcpwasm</a>,
+        their reference implementation.
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div class="footer-links">
+      <a href="https://github.com/MauricioPerera/llms-txt-skills">GitHub</a>
+      <a href="https://github.com/MauricioPerera/llms-txt-skills/blob/master/docs/rfc-skills-in-llms-txt.md" data-i18n="footer.rfc">Read the RFC</a>
+      <a href="https://github.com/MauricioPerera/llms-txt-skills/blob/master/docs/adoption.md" data-i18n="footer.onboard">Adoption status</a>
+      <a href="https://github.com/MauricioPerera/llms-txt-skills/blob/master/LICENSE" data-i18n="footer.license">MIT License</a>
+    </div>
+    <a href="https://github.com/MauricioPerera/llms-txt-skills/actions/workflows/validate.yml">
+      <img alt="CI" src="https://github.com/MauricioPerera/llms-txt-skills/actions/workflows/validate.yml/badge.svg">
+    </a>
+  </div>
+</footer>
+
+<script src="js/i18n.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
