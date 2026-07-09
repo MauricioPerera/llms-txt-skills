@@ -70,10 +70,60 @@ def parse_yaml_frontmatter(text: str) -> dict[str, Any] | None:
             result[m.group(1)] = m.group(2).strip()
     return result
 
+MEMORY_RE = re.compile(r"^<!--\s*skills-memory:\s*(.*?)\s*-->\s*$")
+
+
+def validate_skills_memory(source: str, text: str, errors: list[dict[str, str]], warnings: list[dict[str, str]]) -> None:
+    """Valida la linea opcional de origin memory (Executable Skills v0.4 Sec. 2.4):
+    <!-- skills-memory: {"snapshot":"...","snapshot_sha256":"...","format":"..."} -->
+    Ausente -> no hace nada (es opcional). Requiere snapshot/snapshot_sha256/format
+    (los 3 strings); snapshot_sha256 debe ser hex de 64 caracteres. Si el snapshot
+    resuelve a un archivo local, verifica el hash real contra el declarado.
+    """
+    memory_line = None
+    for line in text.splitlines():
+        m = MEMORY_RE.match(line.strip())
+        if m:
+            memory_line = m.group(1)
+            break
+    if memory_line is None:
+        return
+
+    try:
+        meta = json.loads(memory_line)
+    except json.JSONDecodeError as e:
+        errors.append({"file": source, "line": memory_line[:80], "message": f"skills-memory: JSON invalido: {e}"})
+        return
+
+    for key in ("snapshot", "snapshot_sha256", "format"):
+        if key not in meta or not isinstance(meta[key], str):
+            errors.append({"file": source, "line": memory_line[:80], "message": f"skills-memory: falta o invalido '{key}' (debe ser string)"})
+    if any(k not in meta or not isinstance(meta[k], str) for k in ("snapshot", "snapshot_sha256", "format")):
+        return
+
+    if not re.match(r"^[a-fA-F0-9]{64}$", meta["snapshot_sha256"]):
+        errors.append({"file": source, "line": memory_line[:80], "message": "skills-memory: snapshot_sha256 invalido (debe ser 64 hex chars)"})
+
+    if meta["format"] != "minimemory-okf-v1":
+        warnings.append({"file": source, "line": memory_line[:80], "message": f"skills-memory: format '{meta['format']}' no es el unico reconocido hoy (minimemory-okf-v1); un runtime que no lo soporte debe ignorar la capability, no fallar"})
+
+    resolved = resolve_skill_path(meta["snapshot"], source)
+    if not resolved.startswith(("http://", "https://")):
+        snapshot_path = Path(resolved)
+        if not snapshot_path.exists():
+            errors.append({"file": source, "line": memory_line[:80], "message": f"skills-memory: snapshot no encontrado: {resolved}"})
+        elif re.match(r"^[a-fA-F0-9]{64}$", meta["snapshot_sha256"]):
+            actual = hashlib.sha256(snapshot_path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+            if actual != meta["snapshot_sha256"]:
+                errors.append({"file": source, "line": memory_line[:80], "message": f"skills-memory: snapshot_sha256 mismatch: declarado {meta['snapshot_sha256']}, actual {actual}"})
+
+
 def validate_llms_txt(source: str, text: str) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
     """Valida llms.txt y retorna (errores, warnings)."""
     errors: list[dict[str, str]] = []
     warnings: list[dict[str, str]] = []
+
+    validate_skills_memory(source, text, errors, warnings)
 
     # 1. Buscar seccion ## Skills
     lines = text.splitlines()
@@ -142,6 +192,16 @@ def validate_llms_txt(source: str, text: str) -> tuple[list[dict[str, str]], lis
                     warnings.append({"file": source, "line": raw[:80], "message": f"Version semantica invalida: {meta_parsed['version']}"})
                 if "sha256" in meta_parsed and not re.match(r"^[a-fA-F0-9]{64}$", str(meta_parsed["sha256"])):
                     errors.append({"file": source, "line": raw[:80], "message": "SHA-256 invalido (debe ser 64 hex chars)"})
+                # Executable Skills extension v0.4: 'tool' y 'tool_sha256' viajan
+                # juntos (Sec 2.1). Uno sin el otro es una declaracion a medias.
+                has_tool = "tool" in meta_parsed
+                has_tool_sha = "tool_sha256" in meta_parsed
+                if has_tool and not has_tool_sha:
+                    errors.append({"file": source, "line": raw[:80], "message": "'tool' declarado sin 'tool_sha256' (ambos son requeridos juntos, Executable Skills v0.4)"})
+                if has_tool_sha and not has_tool:
+                    errors.append({"file": source, "line": raw[:80], "message": "'tool_sha256' declarado sin 'tool' (ambos son requeridos juntos, Executable Skills v0.4)"})
+                if has_tool_sha and not re.match(r"^[a-fA-F0-9]{64}$", str(meta_parsed["tool_sha256"])):
+                    errors.append({"file": source, "line": raw[:80], "message": "tool_sha256 invalido (debe ser 64 hex chars)"})
             except json.JSONDecodeError as e:
                 errors.append({"file": source, "line": raw[:80], "message": f"Metadata JSON invalido: {e}"})
 
@@ -162,6 +222,19 @@ def validate_llms_txt(source: str, text: str) -> tuple[list[dict[str, str]], lis
                         actual_hash = hashlib.sha256(skill_path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
                         if actual_hash != declared_hash:
                             errors.append({"file": source, "line": raw[:80], "message": f"SHA-256 mismatch: declarado {declared_hash}, actual {actual_hash}"})
+
+                # 4c. Executable Skills v0.4: si 'tool' resuelve a un archivo local,
+                # verificar tool_sha256 contra los bytes reales del tool.js.
+                if meta_parsed and meta_parsed.get("tool") and meta_parsed.get("tool_sha256"):
+                    tool_resolved = resolve_skill_path(meta_parsed["tool"], source)
+                    if not tool_resolved.startswith(("http://", "https://")):
+                        tool_path = Path(tool_resolved)
+                        if not tool_path.exists():
+                            errors.append({"file": source, "line": raw[:80], "message": f"tool.js no encontrado: {tool_resolved}"})
+                        else:
+                            actual_tool_hash = hashlib.sha256(tool_path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+                            if actual_tool_hash != meta_parsed["tool_sha256"]:
+                                errors.append({"file": source, "line": raw[:80], "message": f"tool_sha256 mismatch: declarado {meta_parsed['tool_sha256']}, actual {actual_tool_hash}"})
                 fm = parse_yaml_frontmatter(skill_text)
                 if not fm:
                     errors.append({"file": resolved, "line": "", "message": "Skill sin YAML frontmatter valido"})

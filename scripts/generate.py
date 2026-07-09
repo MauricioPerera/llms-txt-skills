@@ -66,7 +66,15 @@ def sha256_normalized(path: Path) -> str:
 
 
 def load_skills(manifest: dict[str, Any]) -> list[dict[str, Any]]:
-    """Lee cada SKILL.md publicado y arma su metadata combinando frontmatter + manifest."""
+    """Lee cada SKILL.md publicado y arma su metadata combinando frontmatter + manifest.
+
+    Si la entrada del manifest declara 'tool' (path al tool.js relativo al repo)
+    y 'tool_url' (URL/path publico de ese tool.js), la skill se trata como
+    ejecutable (Executable Skills extension v0.4 Sec. 2.1): se calcula
+    tool_sha256 igual que sha256 (CRLF normalizado a LF) y ambos campos viajan
+    juntos en el metadata inline y en el indice. Sin 'tool' -> skill de solo
+    prosa, comportamiento identico al anterior.
+    """
     skills: list[dict[str, Any]] = []
     for entry in manifest["published"]:
         path = REPO_ROOT / entry["path"]
@@ -76,6 +84,18 @@ def load_skills(manifest: dict[str, Any]) -> list[dict[str, Any]]:
         for key in REQUIRED_FRONTMATTER:
             if key not in fm:
                 raise ValueError(f"{entry['path']}: frontmatter falta '{key}'")
+
+        tool_url = None
+        tool_sha256 = None
+        if entry.get("tool"):
+            if not entry.get("tool_url"):
+                raise ValueError(f"{entry['path']}: declara 'tool' sin 'tool_url' (ambos son requeridos juntos)")
+            tool_path = REPO_ROOT / entry["tool"]
+            if not tool_path.exists():
+                raise FileNotFoundError(f"tool.js no encontrado: {entry['tool']}")
+            tool_url = entry["tool_url"]
+            tool_sha256 = sha256_normalized(tool_path)
+
         skills.append(
             {
                 "name": fm["name"],
@@ -87,16 +107,62 @@ def load_skills(manifest: dict[str, Any]) -> list[dict[str, Any]]:
                 "summary": entry["summary"],
                 "sha256": sha256_normalized(path),
                 "path": path,
+                "tool_url": tool_url,
+                "tool_sha256": tool_sha256,
             }
         )
     return skills
 
 
+def load_memory(manifest: dict[str, Any]) -> dict[str, Any] | None:
+    """Lee la declaracion opcional de origin memory del manifest (Executable
+    Skills extension v0.4 Sec. 2.4). manifest["memory"] = {"snapshot_path":
+    "<path relativo al repo>", "snapshot_url": "<path publico>", "format":
+    "minimemory-okf-v1"}. Sin 'memory' en el manifest -> None (el origin no
+    declara memoria, comportamiento identico al anterior).
+    """
+    memory = manifest.get("memory")
+    if not memory:
+        return None
+    for key in ("snapshot_path", "snapshot_url", "format"):
+        if not memory.get(key):
+            raise ValueError(f"manifest['memory'] necesita '{key}'")
+    snapshot_path = REPO_ROOT / memory["snapshot_path"]
+    if not snapshot_path.exists():
+        raise FileNotFoundError(f"snapshot no encontrado: {memory['snapshot_path']}")
+    return {
+        "snapshot_url": memory["snapshot_url"],
+        "format": memory["format"],
+        "snapshot_sha256": sha256_normalized(snapshot_path),
+    }
+
+
+def render_skills_memory_line(memory: dict[str, Any] | None) -> str:
+    """Construye la linea `<!-- skills-memory: {...} -->` (sin 'memory' -> string vacio)."""
+    if not memory:
+        return ""
+    meta = {
+        "snapshot": memory["snapshot_url"],
+        "snapshot_sha256": memory["snapshot_sha256"],
+        "format": memory["format"],
+    }
+    meta_json = json.dumps(meta, separators=(",", ":"), ensure_ascii=False)
+    return f"<!-- skills-memory: {meta_json} -->\n\n"
+
+
 def render_skills_section(manifest: dict[str, Any], skills: list[dict[str, Any]]) -> str:
-    """Construye el bloque ## Skills con metadata inline compacta."""
+    """Construye el bloque ## Skills con metadata inline compacta.
+
+    Skills con tool_url/tool_sha256 (Executable Skills v0.4) llevan 'tool' y
+    'tool_sha256' agregados al JSON inline, despues de sha256; skills de solo
+    prosa quedan identicas a antes.
+    """
     lines = ["## Skills", "", manifest["section_intro"], ""]
     for s in skills:
         meta = {"version": s["version"], "license": s["license"], "sha256": s["sha256"]}
+        if s.get("tool_url") and s.get("tool_sha256"):
+            meta["tool"] = s["tool_url"]
+            meta["tool_sha256"] = s["tool_sha256"]
         meta_json = json.dumps(meta, separators=(",", ":"), ensure_ascii=False)
         lines.append(
             f"- [{s['name']}]({s['url']}): {s['summary']} <!-- skill: {meta_json} -->"
@@ -104,16 +170,25 @@ def render_skills_section(manifest: dict[str, Any], skills: list[dict[str, Any]]
     return "\n".join(lines) + "\n"
 
 
-def render_llms_txt(current: str, section: str) -> str:
-    """Reemplaza (o agrega) la seccion ## Skills al final de llms.txt, preservando el resto."""
+MEMORY_LINE_RE = re.compile(r"^<!--\s*skills-memory:\s*\{.*?\}\s*-->\s*$")
+
+
+def render_llms_txt(current: str, section: str, memory_line: str = "") -> str:
+    """Reemplaza (o agrega) la seccion ## Skills al final de llms.txt, preservando
+    el resto. Cualquier linea skills-memory preexistente se descarta (se
+    regenera determinista desde el manifest); memory_line (si no es "") se
+    reinserta justo antes de ## Skills, como exige Sec. 2.4 de la extension.
+    """
     out: list[str] = []
     for line in current.splitlines():
         if re.match(r"^##\s+skills\s*$", line.strip(), re.IGNORECASE):
             break
+        if MEMORY_LINE_RE.match(line.strip()):
+            continue
         out.append(line)
     while out and not out[-1].strip():
         out.pop()
-    return "\n".join(out) + "\n\n" + section
+    return "\n".join(out) + "\n\n" + memory_line + section
 
 
 def load_signing_key(manifest: dict[str, Any]):
@@ -207,6 +282,9 @@ def render_index(skills: list[dict[str, Any]], signing_key_b64: str | None) -> s
         if s["homepage"]:
             item["homepage"] = s["homepage"]
         item["sha256"] = s["sha256"]
+        if s.get("tool_url") and s.get("tool_sha256"):
+            item["tool"] = s["tool_url"]
+            item["tool_sha256"] = s["tool_sha256"]
         if s.get("signature"):
             item["signature"] = s["signature"]
         items.append(item)
@@ -221,7 +299,9 @@ def render_index(skills: list[dict[str, Any]], signing_key_b64: str | None) -> s
 
 def build_targets(manifest: dict[str, Any], skills: list[dict[str, Any]]) -> list[tuple[Path, str]]:
     section = render_skills_section(manifest, skills)
-    new_llms = render_llms_txt(LLMS_TXT_PATH.read_text(encoding="utf-8"), section)
+    memory = load_memory(manifest)
+    memory_line = render_skills_memory_line(memory)
+    new_llms = render_llms_txt(LLMS_TXT_PATH.read_text(encoding="utf-8"), section, memory_line)
 
     default_name = manifest["default_skill"]
     try:

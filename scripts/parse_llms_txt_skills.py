@@ -136,6 +136,45 @@ def _parse_skill_item(raw: str) -> dict[str, Any] | None:
     return result
 
 
+MEMORY_RE = re.compile(r"^<!--\s*skills-memory:\s*(.*?)\s*-->\s*$")
+
+
+def parse_skills_memory(text: str) -> dict[str, Any] | None:
+    """
+    Extrae la linea de origin memory (Executable Skills extension v0.4 Sec. 2.4):
+
+        <!-- skills-memory: {"snapshot":"...","snapshot_sha256":"...","format":"minimemory-okf-v1"} -->
+
+    Requiere snapshot, snapshot_sha256 y format (los 3 strings); si falta alguno
+    o el JSON es invalido, devuelve None (no rompe el parseo del resto). Solo se
+    toma la PRIMERA linea valida del documento (no necesariamente dentro de
+    ## Skills). Si el format no es "minimemory-okf-v1", se marca
+    unsupported=True: el runtime debe ignorar la capability pero no fallar.
+    """
+    for line in text.splitlines():
+        m = MEMORY_RE.match(line.strip())
+        if not m:
+            continue
+        try:
+            meta = json.loads(m.group(1))
+        except json.JSONDecodeError:
+            continue
+        if (
+            not isinstance(meta, dict)
+            or not isinstance(meta.get("snapshot"), str)
+            or not isinstance(meta.get("snapshot_sha256"), str)
+            or not isinstance(meta.get("format"), str)
+        ):
+            continue
+        return {
+            "snapshot": meta["snapshot"],
+            "snapshot_sha256": meta["snapshot_sha256"],
+            "format": meta["format"],
+            "unsupported": meta["format"] != "minimemory-okf-v1",
+        }
+    return None
+
+
 def resolve_url(skill_url: str, base_url: str) -> str:
     """Resuelve URLs relativas a absolutas usando la fuente como base."""
     # Si la fuente es una URL HTTP(S), usar urljoin
@@ -169,19 +208,19 @@ def main() -> int:
         return 1
 
     skills = parse_skills_section(text)
-
-    if not skills:
-        print(json.dumps({"skills": [], "count": 0}, indent=2))
-        return 0
+    memory = parse_skills_memory(text)
 
     if args.resolve:
         for s in skills:
             s["url"] = resolve_url(s["url"], args.source)
+        if memory:
+            memory["snapshot"] = resolve_url(memory["snapshot"], args.source)
 
     output = {
         "source": args.source,
         "skills": skills,
         "count": len(skills),
+        "memory": memory,
     }
 
     print(json.dumps(output, indent=2, ensure_ascii=False))

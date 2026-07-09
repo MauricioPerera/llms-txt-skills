@@ -53,6 +53,15 @@
               "homepage": {
                 "type": "string",
                 "description": "URL de la pagina principal del proyecto"
+              },
+              "tool": {
+                "type": "string",
+                "description": "Path al tool.js ejecutable (Executable Skills extension v0.4). Requerido junto con tool_sha256 para que la skill sea ejecutable; ausente en skills solo-prosa."
+              },
+              "tool_sha256": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{64}$",
+                "description": "SHA-256 hex del contenido exacto de tool.js. Requerido cuando 'tool' esta presente (Executable Skills extension v0.4)."
               }
             },
             "additionalProperties": true
@@ -69,6 +78,36 @@
       "type": "integer",
       "minimum": 0,
       "description": "Numero total de skills descubiertas"
+    },
+    "memory": {
+      "description": "Origin memory (Executable Skills extension v0.4 Sec. 2.4), o null si el origin no declara una linea skills-memory valida.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["snapshot", "snapshot_sha256", "format", "unsupported"],
+          "properties": {
+            "snapshot": {
+              "type": "string",
+              "description": "Path (o URL resuelta) al snapshot de busqueda BM25."
+            },
+            "snapshot_sha256": {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{64}$",
+              "description": "SHA-256 hex del contenido exacto del snapshot."
+            },
+            "format": {
+              "type": "string",
+              "description": "Identificador del formato del snapshot. Unico formato reconocido hoy: minimemory-okf-v1."
+            },
+            "unsupported": {
+              "type": "boolean",
+              "description": "true si 'format' no es un formato que este parser/runtime reconozca; la capability no debe inyectarse."
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     }
   },
   "additionalProperties": true
