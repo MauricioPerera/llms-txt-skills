@@ -16,10 +16,13 @@ This file is a standalone distributable: it has no repo-relative imports so it
 can be dropped into any MCP client config.
 """
 
+import asyncio
 import base64
 import hashlib
+import ipaddress
 import json
 import re
+import socket
 from enum import Enum
 from typing import Any, Optional
 from urllib.parse import urljoin, urlparse
@@ -32,6 +35,7 @@ mcp = FastMCP("llms_txt_skills_mcp")
 
 USER_AGENT = "llms-txt-skills-mcp/1.0 (+https://github.com/MauricioPerera/llms-txt-skills)"
 HTTP_TIMEOUT = 10.0
+MAX_REDIRECTS = 5
 
 
 # --------------------------------------------------------------------------- #
@@ -53,13 +57,64 @@ def _looks_like_html(content_type: str, body: str) -> bool:
     return "html" in content_type.lower() or head.startswith(("<!doctype html", "<html"))
 
 
+def _ip_is_public(ip: "ipaddress.IPv4Address | ipaddress.IPv6Address") -> bool:
+    """Reject loopback, private, link-local (covers the 169.254.169.254 cloud
+    metadata endpoint), multicast, reserved, and unspecified addresses."""
+    return not (
+        ip.is_private
+        or ip.is_loopback
+        or ip.is_link_local
+        or ip.is_reserved
+        or ip.is_multicast
+        or ip.is_unspecified
+    )
+
+
+async def _is_safe_url(url: str) -> bool:
+    """SSRF guard: only allow http(s) URLs whose host resolves exclusively to
+    public IP addresses. Re-run on every redirect hop, not just the first URL,
+    since a malicious site could 302 a public URL to an internal one."""
+    parts = urlparse(url)
+    if parts.scheme not in ("http", "https") or not parts.hostname:
+        return False
+    host = parts.hostname
+    try:
+        return _ip_is_public(ipaddress.ip_address(host))
+    except ValueError:
+        pass  # host is a name, not an IP literal; resolve and check below.
+    loop = asyncio.get_running_loop()
+    try:
+        infos = await loop.getaddrinfo(host, None)
+    except socket.gaierror:
+        return False
+    if not infos:
+        return False
+    try:
+        return all(_ip_is_public(ipaddress.ip_address(info[4][0])) for info in infos)
+    except ValueError:
+        return False
+
+
 async def _http_get(url: str) -> Optional[httpx.Response]:
-    """GET a URL, following redirects. Returns the response or None on any error."""
+    """GET a URL, following redirects manually (each hop re-checked against the
+    SSRF guard). Returns the response or None on any error, blocked host, or a
+    redirect chain longer than MAX_REDIRECTS."""
     try:
         async with httpx.AsyncClient(
-            headers={"User-Agent": USER_AGENT}, follow_redirects=True, timeout=HTTP_TIMEOUT
+            headers={"User-Agent": USER_AGENT}, follow_redirects=False, timeout=HTTP_TIMEOUT
         ) as client:
-            return await client.get(url)
+            current = url
+            for _ in range(MAX_REDIRECTS + 1):
+                if not await _is_safe_url(current):
+                    return None
+                resp = await client.get(current)
+                if not resp.is_redirect:
+                    return resp
+                location = resp.headers.get("location")
+                if not location:
+                    return resp
+                current = urljoin(current, location)
+            return None  # too many redirects
     except httpx.HTTPError:
         return None
 
@@ -117,17 +172,25 @@ async def _fetch_index(origin: str) -> Optional[dict[str, Any]]:
 
 
 def _verify_signature(content: bytes, signature_b64: str, key_b64: str) -> Optional[bool]:
-    """Verify an ed25519 signature. Returns True/False, or None if crypto is unavailable."""
+    """Verify an ed25519 signature. Returns True/False, or None if crypto is unavailable.
+
+    `signature_b64`/`key_b64` come from a remote, untrusted index.json — malformed
+    base64 or a wrong-length key/signature must resolve to False (invalid), not
+    raise, otherwise a hostile or broken publisher can crash the tool call.
+    """
     try:
         from cryptography.exceptions import InvalidSignature
         from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
     except ImportError:
         return None
-    pub = Ed25519PublicKey.from_public_bytes(base64.b64decode(key_b64))
     try:
+        pub = Ed25519PublicKey.from_public_bytes(base64.b64decode(key_b64))
         pub.verify(base64.b64decode(signature_b64), content)
         return True
     except InvalidSignature:
+        return False
+    except (ValueError, TypeError):
+        # Malformed base64, or a decoded key/signature of the wrong length.
         return False
 
 
