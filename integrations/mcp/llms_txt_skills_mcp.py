@@ -290,12 +290,16 @@ async def llmstxt_discover_skills(params: DiscoverInput) -> str:
 
     Returns:
         str: Markdown or JSON listing each skill's title, absolute URL,
-        description and inline version (if declared). Schema (json):
+        description, inline version (if declared), and whether it is
+        executable (Executable Skills extension v0.4: the skill declares
+        both `tool` and `tool_sha256`). This server only discovers/verifies
+        prose SKILL.md content — it does not run tool.js. Schema (json):
         {
           "origin": str,
           "count": int,
           "skills": [
-            {"title": str, "url": str, "description": str, "version": str|null}
+            {"title": str, "url": str, "description": str, "version": str|null,
+             "executable": bool, "hint": str|null}
           ]
         }
     """
@@ -310,12 +314,25 @@ async def llmstxt_discover_skills(params: DiscoverInput) -> str:
     resolved = []
     for s in skills:
         meta = s.get("metadata") or {}
+        # Executable Skills extension v0.4: 'tool' + 'tool_sha256' together
+        # mean this skill ships a sandboxed tool.js, not just prose. This
+        # server has no sandbox — it can discover and verify the SKILL.md,
+        # but running the tool.js is out of scope. Point the caller at the
+        # reference runtime (mcpwasm) instead of silently ignoring the field.
+        executable = isinstance(meta.get("tool"), str) and isinstance(meta.get("tool_sha256"), str)
         resolved.append(
             {
                 "title": s["title"],
                 "url": urljoin(origin + "/", s["url"]),
                 "description": s["description"],
                 "version": meta.get("version"),
+                "executable": executable,
+                "hint": (
+                    "This skill declares a sandboxed tool.js (Executable Skills v0.4). "
+                    "This server only verifies the SKILL.md prose; to discover, verify, "
+                    "and RUN the tool.js sandboxed, use the mcpwasm runtime instead: "
+                    f"npx -y @rckflr/mcpwasm {origin} — https://github.com/MauricioPerera/mcpwasm"
+                ) if executable else None,
             }
         )
 
@@ -331,9 +348,12 @@ async def llmstxt_discover_skills(params: DiscoverInput) -> str:
     lines = [f"# {len(resolved)} skill(s) published by {origin}", ""]
     for s in resolved:
         ver = f" (v{s['version']})" if s["version"] else ""
-        lines.append(f"## {s['title']}{ver}")
+        tag = " [executable]" if s["executable"] else ""
+        lines.append(f"## {s['title']}{ver}{tag}")
         lines.append(f"- {s['description']}")
         lines.append(f"- Load with `llmstxt_fetch_skill`: {s['url']}")
+        if s["hint"]:
+            lines.append(f"- {s['hint']}")
         lines.append("")
     return "\n".join(lines)
 
