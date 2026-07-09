@@ -75,7 +75,7 @@ Cuando el llms.txt contradice tu intuición, gana el llms.txt. Es el dueño del 
 
 ### Paso 5: manejar la sección `## Skills` si existe
 
-Formato esperado por entrada (RFC v0.5):
+Formato esperado por entrada (RFC v0.8):
 
 ```
 - [title](URL): description <!-- skill: {"version":"...","license":"...","sha256":"..."} -->
@@ -118,7 +118,7 @@ Markdown plano siguiendo el estándar de llmstxt.org. Estructura mínima:
 ## Otra sección
 ... más contenido ...
 
-## Skills (opcional, según RFC v0.5)
+## Skills (opcional, según RFC v0.8)
 - [skill-id](/skills/skill-id/SKILL.md): cuándo usar esta skill. <!-- skill: {"version":"1.0.0","license":"MIT"} -->
 ```
 
@@ -153,7 +153,7 @@ Si no existe, no hace falta anunciarlo. Seguí silenciosamente con el flujo norm
 
 ## Referencias
 
-- Spec llms.txt Skills (RFC v0.5): https://github.com/MauricioPerera/llms-txt-skills
+- Spec llms.txt Skills (RFC v0.8): https://github.com/MauricioPerera/llms-txt-skills
 - Estándar original llms.txt: https://llmstxt.org
 - Parser de referencia: `scripts/parse_llms_txt_skills.py` del repo de la spec.
 - Validador de referencia: `scripts/validate.py` del repo de la spec.

@@ -1,6 +1,6 @@
 # llms.txt Skills Specification
 
-> Draft v0.4 — Especificación para publicar y consumir Agent Skills a través de `llms.txt`.
+> Draft v0.8 — Especificación para publicar y consumir Agent Skills a través de `llms.txt`.
 
 ---
 
@@ -127,7 +127,7 @@ La skill no inventa protocolos: usa lo que el sitio publica. Si el sitio no tien
 
 Este repo contiene:
 
-- **RFC v0.5**: especificación completa del protocolo
+- **RFC v0.8**: especificación completa del protocolo
 - **Parser y validador**: herramientas de referencia en Python
 - **Generador/sincronizador**: regenera `## Skills`, la copia `.well-known` y el índice canónico desde el frontmatter de cada skill
 - **Firma y verificación**: firma ed25519 de cada skill (autenticidad) y verificador independiente
@@ -146,7 +146,7 @@ llms-txt-skills/
 ├── README.md                         # Este archivo
 ├── .gitignore
 ├── docs/
-│   ├── rfc-skills-in-llms-txt.md     # RFC completo (v0.5)
+│   ├── rfc-skills-in-llms-txt.md     # RFC completo (v0.8)
 │   ├── adoption.md                   # Estado de adopción (consumers, trust model, hilos)
 │   ├── articulo-propuesta.md         # Divulgación
 │   └── articulo-linkedin.md          # Divulgación

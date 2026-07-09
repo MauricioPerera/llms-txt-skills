@@ -1,6 +1,6 @@
 # State of adoption
 
-A single, linkable summary of where the `## Skills` in `llms.txt` proposal stands: what consumes it, how trust works, and where it has been proposed. Updated 2026-06-02 (RFC v0.5).
+A single, linkable summary of where the `## Skills` in `llms.txt` proposal stands: what consumes it, how trust works, and where it has been proposed. Updated 2026-06-02 (RFC v0.8).
 
 ## Consumers (you can use these today)
 
