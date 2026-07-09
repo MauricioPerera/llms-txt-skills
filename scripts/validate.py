@@ -132,6 +132,7 @@ def validate_llms_txt(source: str, text: str) -> tuple[list[dict[str, str]], lis
         url = m.group(2).strip()
         desc = m.group(3).strip()
         meta_raw = m.group(4)
+        meta_parsed = None
 
         # 3. Validar metadata inline
         if meta_raw:

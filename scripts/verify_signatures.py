@@ -27,14 +27,25 @@ DEFAULT_INDEX = REPO_ROOT / ".well-known" / "agent-skills" / "index.json"
 
 
 def read_skill_bytes(url: str, index_path: Path) -> bytes:
-    """Lee los bytes normalizados (CRLF->LF) del SKILL.md referenciado por url."""
+    """Lee los bytes normalizados (CRLF->LF) del SKILL.md referenciado por url.
+
+    Lanza OSError con un mensaje claro si la lectura (remota o local) falla,
+    en vez de dejar propagar la excepcion original (URLError, socket.timeout,
+    FileNotFoundError, etc.) hasta el caller.
+    """
     if url.startswith(("http://", "https://")):
-        with urllib.request.urlopen(url, timeout=15) as resp:  # noqa: S310
-            data = resp.read()
+        try:
+            with urllib.request.urlopen(url, timeout=15) as resp:  # noqa: S310
+                data = resp.read()
+        except Exception as e:  # noqa: BLE001
+            raise OSError(f"no se pudo descargar {url}: {type(e).__name__}: {e}") from e
     else:
         # url relativa al root del sitio: resolver contra el repo.
         local = REPO_ROOT / url.lstrip("/")
-        data = local.read_bytes()
+        try:
+            data = local.read_bytes()
+        except OSError as e:
+            raise OSError(f"no se pudo leer {local}: {type(e).__name__}: {e}") from e
     return data.replace(b"\r\n", b"\n")
 
 
@@ -69,7 +80,12 @@ def main() -> int:
         if not sig:
             print(f"[WARN] {name}: sin firma, se omite.")
             continue
-        content = read_skill_bytes(s["url"], index_path)
+        try:
+            content = read_skill_bytes(s["url"], index_path)
+        except OSError as e:
+            print(f"[FAIL] {name}: {e}")
+            errors += 1
+            continue
         try:
             pub.verify(base64.b64decode(sig), content)
             print(f"[OK] {name}: firma valida.")
