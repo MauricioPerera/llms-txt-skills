@@ -1,6 +1,6 @@
 # Cómo enseñar a un agente de IA a usar tu sitio web: la propuesta llms.txt Skills
 
-> **Versión accesible del RFC v0.2** — para desarrolladores, product managers, y cualquier persona que quiera que los agentes de IA entiendan su sitio web sin montar un servidor.
+> **Versión accesible del RFC v0.8** — para desarrolladores, product managers, y cualquier persona que quiera que los agentes de IA entiendan su sitio web sin montar un servidor.
 
 ---
 
@@ -88,7 +88,7 @@ La sección ## Skills vive dentro del llms.txt que ya sirves en la raíz de tu d
 1. El heading debe ser exactamente ## Skills (case-insensitive).
 2. Cada item sigue la convención de link estándar de llms.txt: - [title](URL): description.
 3. La URL debe resolver a:
-   - Un SKILL.md raw (	ext/markdown), o
+   - Un SKILL.md raw (text/markdown), o
    - Un archivo .zip o .tar.gz que contenga SKILL.md en la raíz.
 4. La skill debe ser un Agent Skill válido (YAML frontmatter + cuerpo markdown).
 5. Preferentemente same-origin. Cross-origin requiere confirmación extra del usuario.
@@ -104,10 +104,9 @@ El HTML comment al final de cada línea permite declarar versión, hash de integ
 
 **Claves reconocidas:**
 
-- ersion: SemVer de la skill.
+- version: SemVer de la skill.
 - sha256: Hash SHA-256 del contenido del SKILL.md (con normalización CRLF→LF).
-- 
-equires: Versión mínima del agente runtime.
+- requires: Versión mínima del agente runtime.
 - license: Licencia SPDX (MIT, Apache-2.0, etc.).
 - homepage: URL del proyecto.
 
@@ -187,7 +186,7 @@ llms-txt-skills/
 ├── README.md                         # Documentación humana
 ├── .gitignore
 ├── docs/
-│   └── rfc-skills-in-llms-txt.md     # RFC completo (v0.2)
+│   └── rfc-skills-in-llms-txt.md     # RFC completo (v0.8)
 ├── scripts/
 │   ├── parse_llms_txt_skills.py      # Parser de referencia en Python
 │   └── validate.py                   # Validador de llms.txt y skills
@@ -204,7 +203,7 @@ llms-txt-skills/
 
 Este es el contenido real de skills/placeholder/SKILL.md:
 
-```yaml
+````yaml
 ---
 name: placeholder
 description: Generate SVG placeholder images for UI mockups via the placeholder-img HTTP API. Use when the user asks for placeholder images, mockup assets, or dummy images with specific dimensions and colors.
@@ -238,7 +237,7 @@ https://img.automators.work
 ```
 
 - width, height: integers in px, each ≤ 4000.
-- g (optional): 6-digit hex without #. Defaults to cccccc.
+- bg (optional): 6-digit hex without #. Defaults to cccccc.
 
 ## Examples
 
@@ -262,8 +261,8 @@ When the user asks for a placeholder in HTML context, emit:
 ## Failure modes
 
 - If width or height is not an integer, the API returns HTTP 400.
-- If g is not a 6-digit hex, the SVG is still returned but with the default gray background.
-```
+- If bg is not a 6-digit hex, the SVG is still returned but with the default gray background.
+````
 
 ### Parser de referencia
 
@@ -324,8 +323,8 @@ Un blog técnico publica una skill content-style que enseña al agente cómo cit
 
 Una API SaaS publica dos skills:
 
-- pi-read: endpoints públicos de consulta.
-- pi-write: endpoints autenticados de creación y modificación.
+- api-read: endpoints públicos de consulta.
+- api-write: endpoints autenticados de creación y modificación.
 
 El usuario elige cuál usar. El agente no asume permisos.
 
@@ -426,7 +425,7 @@ A medida que los runtimes de agentes evolucionen hacia un descubrimiento web má
 MIT — este estándar y su implementación de referencia son de dominio público para su adopción. No hay gatekeeper. No hay marketplace que aprobar. Es un git push.
 
 **Autor:** [automators.work](https://automators.work)
-**RFC:** v0.2 (2026-04-21)
+**RFC:** v0.8 (2026-06-02)
 **Repo:** [github.com/MauricioPerera/llms-txt-skills](https://github.com/MauricioPerera/llms-txt-skills)
 **Implementación viva:** [img.automators.work](https://img.automators.work)
 

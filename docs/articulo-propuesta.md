@@ -1,6 +1,6 @@
 # Cómo enseñar a un agente de IA a usar tu sitio web: la propuesta llms.txt Skills
 
-> **Versión accesible del RFC v0.2** — para desarrolladores, product managers, y cualquier persona que quiera que los agentes de IA entiendan su sitio web sin montar un servidor.
+> **Versión accesible del RFC v0.8** — para desarrolladores, product managers, y cualquier persona que quiera que los agentes de IA entiendan su sitio web sin montar un servidor.
 
 ---
 
@@ -27,13 +27,13 @@ Hoy existen dos especies de documentación para agentes de IA que no se hablan:
 
 > **Añade una sección ## Skills dentro de tu llms.txt.**
 
-Eso es todo. Una sola sección de markdown que enlaza a tus SKILL.md. El agente que ya lee tu llms.txt para entender quién eres, ahora también descubre *cómo* interactuar contigo —en el mismo documento, con un solo etch.
+Eso es todo. Una sola sección de markdown que enlaza a tus SKILL.md. El agente que ya lee tu llms.txt para entender quién eres, ahora también descubre *cómo* interactuar contigo —en el mismo documento, con un solo fetch.
 
-`markdown
+```markdown
 ## Skills
 
 - [placeholder](/skills/placeholder/SKILL.md): generate SVG placeholder image URLs for UI mockups. <!-- skill: {"version":"1.0.0","license":"MIT"} -->
-`
+```
 
 ---
 
@@ -67,19 +67,19 @@ Vuelve al restaurante. Hoy tienes tres formas de que un asistente de IA sepa có
 
 La sección ## Skills vive dentro del llms.txt que ya sirves en la raíz de tu dominio. Su sintaxis es markdown puro, con metadatos inline opcionales:
 
-`markdown
+```markdown
 ## Skills
 
 - [skill-name](https://example.com/skills/skill-name/SKILL.md): description of when to use this skill.
 - [bundle-name](https://example.com/skills/bundle-name.zip): description. <!-- skill: {"version":"1.0.0"} -->
-`
+```
 
 **Reglas:**
 
 1. El heading debe ser exactamente ## Skills (case-insensitive).
 2. Cada item sigue la convención de link estándar de llms.txt: - [title](URL): description.
 3. La URL debe resolver a:
-   - Un SKILL.md raw (	ext/markdown), o
+   - Un SKILL.md raw (text/markdown), o
    - Un archivo .zip o .tar.gz que contenga SKILL.md en la raíz.
 4. La skill debe ser un Agent Skill válido (YAML frontmatter + cuerpo markdown).
 5. Preferentemente same-origin. Cross-origin requiere confirmación extra del usuario.
@@ -89,22 +89,21 @@ La sección ## Skills vive dentro del llms.txt que ya sirves en la raíz de tu d
 
 El HTML comment al final de cada línea permite declarar versión, hash de integridad, licencia, y dependencias sin romper la legibilidad del markdown:
 
-`markdown
+```markdown
 - [pay-with-x402](/skills/x402/SKILL.md): make x402 payments. <!-- skill: {"version":"1.2.0","sha256":"abc123…","license":"MIT"} -->
-`
+```
 
 **Claves reconocidas:**
 
-- ersion: SemVer de la skill.
+- version: SemVer de la skill.
 - sha256: Hash SHA-256 del contenido del SKILL.md (con normalización CRLF→LF).
-- 
-equires: Versión mínima del agente runtime.
+- requires: Versión mínima del agente runtime.
 - license: Licencia SPDX (MIT, Apache-2.0, etc.).
 - homepage: URL del proyecto.
 
 ### 4.3 Flujo de descubrimiento
 
-`
+```
 1. Agente encuentra el dominio (URL o instrucción del usuario)
 2. Busca https://dominio/llms.txt
 3. Parsea la sección ## Skills
@@ -112,7 +111,7 @@ equires: Versión mínima del agente runtime.
 5. El usuario aprueba explícitamente
 6. Agente descarga SKILL.md (verifica sha256 si existe)
 7. Carga y cachea según HTTP cache semantics
-`
+```
 
 **Paso 5 es obligatorio.** Los agentes NO deben auto-instalar skills sin aprobación explícita del usuario.
 
@@ -140,13 +139,13 @@ equires: Versión mínima del agente runtime.
 
 ### Estructura del repo
 
-`
+```
 llms-txt-skills/
 ├── llms.txt                          # Especificación del API + sección ## Skills
 ├── README.md                         # Documentación humana
 ├── .gitignore
 ├── docs/
-│   └── rfc-skills-in-llms-txt.md     # RFC completo (v0.2)
+│   └── rfc-skills-in-llms-txt.md     # RFC completo (v0.8)
 ├── scripts/
 │   ├── parse_llms_txt_skills.py      # Parser de referencia en Python
 │   └── validate.py                   # Validador de llms.txt y skills
@@ -157,13 +156,13 @@ llms-txt-skills/
 │   └── api-client/SKILL.md           # Skill #2: patrones de consumo HTTP
 └── .well-known/skills/default/
     └── SKILL.md                      # Compatibilidad con convención Cloudflare/Mintlify
-`
+```
 
 ### La skill placeholder en detalle
 
 Este es el contenido real de skills/placeholder/SKILL.md:
 
-`yaml
+````yaml
 ---
 name: placeholder
 description: Generate SVG placeholder images for UI mockups via the placeholder-img HTTP API. Use when the user asks for placeholder images, mockup assets, or dummy images with specific dimensions and colors.
@@ -186,18 +185,18 @@ Do NOT use this skill for production images, photography, or when the user wants
 
 ## Base URL
 
-`
+```
 https://img.automators.work
-`
+```
 
 ## Build the URL
 
-`
+```
 {base}/{width}x{height}[?bg={hex6}]
-`
+```
 
 - width, height: integers in px, each ≤ 4000.
-- g (optional): 6-digit hex without #. Defaults to cccccc.
+- bg (optional): 6-digit hex without #. Defaults to cccccc.
 
 ## Examples
 
@@ -210,9 +209,9 @@ https://img.automators.work
 
 When the user asks for a placeholder in HTML context, emit:
 
-`html
+```html
 <img src="https://img.automators.work/{W}x{H}{?bg}" alt="{W}×{H} placeholder" width="{W}" height="{H}">
-`
+```
 
 ## Constraints
 
@@ -223,20 +222,20 @@ When the user asks for a placeholder in HTML context, emit:
 ## Failure modes
 
 - If width or height is not an integer, the API returns HTTP 400.
-- If g is not a 6-digit hex, the SVG is still returned but with the default gray background.
-`
+- If bg is not a 6-digit hex, the SVG is still returned but with the default gray background.
+````
 
 ### Parser de referencia
 
 El script scripts/parse_llms_txt_skills.py extrae la sección ## Skills y devuelve JSON estructurado:
 
-`ash
+```bash
 python scripts/parse_llms_txt_skills.py ./llms.txt --resolve
-`
+```
 
 Salida:
 
-`json
+```json
 {
   "source": "./llms.txt",
   "skills": [
@@ -253,7 +252,7 @@ Salida:
   ],
   "count": 1
 }
-`
+```
 
 ### Validador de referencia
 
@@ -265,9 +264,9 @@ El script scripts/validate.py verifica:
 - Que los archivos de skill locales existan y resuelvan correctamente. (Para URLs remotas, la verificación de contenido y dominio es responsabilidad del agente runtime).
 - Que el hash sha256 declarado coincida con el contenido real.
 
-`ash
+```bash
 python scripts/validate.py ./llms.txt
-`
+```
 
 ---
 
@@ -285,8 +284,8 @@ Un blog técnico publica una skill content-style que enseña al agente cómo cit
 
 Una API SaaS publica dos skills:
 
-- pi-read: endpoints públicos de consulta.
-- pi-write: endpoints autenticados de creación y modificación.
+- api-read: endpoints públicos de consulta.
+- api-write: endpoints autenticados de creación y modificación.
 
 El usuario elige cuál usar. El agente no asume permisos.
 
@@ -337,11 +336,11 @@ Sigue la especificación de [agentskills.io](https://agentskills.io/): YAML fron
 
 ### Paso 3: Añade la sección ## Skills
 
-`markdown
+```markdown
 ## Skills
 
 - [mi-skill](/skills/mi-skill/SKILL.md): qué hace esta skill y cuándo usarla. <!-- skill: {"version":"1.0.0","license":"MIT"} -->
-`
+```
 
 ### Paso 4: Sube todo a tu host estático
 
@@ -353,10 +352,10 @@ Si solo tienes una skill, implementa ambas convenciones para máxima compatibili
 
 ### Paso 6: Valida
 
-`ash
+```bash
 python scripts/validate.py ./llms.txt
 python scripts/parse_llms_txt_skills.py ./llms.txt --resolve
-`
+```
 
 ---
 
@@ -387,7 +386,7 @@ A medida que los runtimes de agentes evolucionen hacia un descubrimiento web má
 MIT — este estándar y su implementación de referencia son de dominio público para su adopción. No hay gatekeeper. No hay marketplace que aprobar. Es un git push.
 
 **Autor:** [automators.work](https://automators.work)
-**RFC:** v0.2 (2026-04-21)
+**RFC:** v0.8 (2026-06-02)
 **Repo:** [github.com/MauricioPerera/llms-txt-skills](https://github.com/MauricioPerera/llms-txt-skills)
 **Implementación viva:** [img.automators.work](https://img.automators.work)
 
