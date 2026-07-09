@@ -2,6 +2,19 @@
 
 A single, linkable summary of where the `## Skills` in `llms.txt` proposal stands: what consumes it, how trust works, and where it has been proposed. Updated 2026-06-02 (RFC v0.8).
 
+## Adoption levels — start minimal, harden later
+
+You do **not** adopt everything at once. Each level is additive and independently useful; a site can stop at any of them.
+
+| Level | You add | What it buys | Effort |
+|---|---|---|---|
+| **L0 · Discoverable** | A `## Skills` section in the `llms.txt` you already serve — one bullet per skill, pointing at a `SKILL.md`. | An agent reading your `llms.txt` now *sees* the skill and can use it (with explicit user opt-in). | ~2 minutes, by hand |
+| **L1 · Integrity** | An inline `sha256` per skill. | Agents refuse to load a `SKILL.md` altered in transit. | one generator command |
+| **L2 · Executable** | A `tool.js` + `tool_sha256` per skill. | A runtime executes the tool verbatim in a sandbox instead of asking a model to improvise ([Executable Skills](ext-executable-skills.md)). | one generator command |
+| **L3 · Attested** | An ed25519 or Sigstore attestation per skill. | Signed human review with an expiry window; a runtime can *require* it before loading ([Skill Attestations](ext-skill-attestations.md)). | one command + a key |
+
+**L0 is the whole ask.** One markdown line makes you discoverable. `sha256`, `tool.js`, `index.json`, signing, and attestations are progressive hardening the tooling adds *for* you — not prerequisites. Publish at L0 today; climb only when your risk model asks for it.
+
 ## Consumers (you can use these today)
 
 The proposal is no longer "one author + demos." There are three independent ways to consume skills published via `llms.txt`:
@@ -10,6 +23,7 @@ The proposal is no longer "one author + demos." There are three independent ways
 |---|---|---|
 | **Claude Code plugin** | Claude Code | `/plugin marketplace add MauricioPerera/llms-txt-skills` then `/plugin install llms-txt-aware@llms-txt-skills` |
 | **MCP server** | Any MCP runtime (Cline, Continue, Cursor, Claude Desktop, Windsurf, …) | [`integrations/mcp/`](../integrations/mcp/) — tools `llmstxt_read`, `llmstxt_discover_skills`, `llmstxt_fetch_skill` (with signature verification) |
+| **Static-site → MCP (mcpwasm)** | Any MCP client | `npx -y @rckflr/mcpwasm <origin>` — the reference runtime for **executable** skills: fetches `/llms.txt`, verifies every `tool_sha256`, sandboxes each `tool.js` in QuickJS-wasm, and speaks MCP over stdio. Zero install on either side. |
 | **aider (native `/web`)** | aider | PR adding discovery on `/web`: https://github.com/Aider-AI/aider/pull/5208 (in review) |
 
 All three follow the same contract: read `/llms.txt`, surface published skills, **never auto-load** (explicit user opt-in), fail open when a site has no `llms.txt`.
@@ -52,6 +66,8 @@ python scripts/generate.py --check  # CI guard: fails if anything is out of sync
 ```
 
 The generator computes `sha256`, syncs the `.well-known` artifacts, and signs each skill — eliminating the manual steps and the drift between source and published artifacts. CI runs `--check` and `verify_signatures.py` on every push.
+
+Your `llms.txt` is the **source of truth**. `index.json` and the `.well-known` copies are **derived** artifacts the generator produces and keeps in sync — you never hand-edit them, and a publisher who only needs L0–L1 discovery does not need `index.json` at all (a consumer treats it as an optional canonical/cross-check layer, not a requirement).
 
 ## Where it has been proposed
 

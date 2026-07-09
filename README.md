@@ -229,6 +229,13 @@ El RFC §5.1 documenta 4 mecanismos de descubrimiento (HTTP Link header, DNS TXT
 
 ## Cómo adoptar el estándar en tu dominio (3 pasos)
 
+> **El caso mínimo (L0) es una sola línea.** Agregar la sección `## Skills` a tu
+> `llms.txt` (Paso 1) + un `SKILL.md` (Paso 2) ya te hace descubrible — nada más
+> es obligatorio. El `sha256`, la firma, `tool.js` e `index.json` son
+> **endurecimiento opcional** que el generador agrega por vos (Paso 3);
+> subís de nivel cuando tu modelo de riesgo lo pida. La escalera completa
+> L0→L3 está en [`docs/adoption.md`](docs/adoption.md).
+
 ### Paso 1: Crea tu `llms.txt`
 
 ```markdown
