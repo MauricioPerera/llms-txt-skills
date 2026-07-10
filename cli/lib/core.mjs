@@ -30,7 +30,16 @@ export function parseFrontmatter(text) {
   const result = {};
   for (const line of body.split(/\r?\n/)) {
     const m = line.match(/^([a-zA-Z_][a-zA-Z0-9_-]*)\s*:\s*(.*)$/);
-    if (m) result[m[1]] = m[2].trim().replace(/^"|"$/g, "");
+    if (m) {
+      let v = m[2].trim();
+      // strip one MATCHING pair of quotes (double or single) — real-world YAML
+      // frontmatter uses both (e.g. type: 'Concept'), and stripping only one
+      // style leaves quote characters inside the value.
+      if (v.length >= 2 && ((v[0] === '"' && v[v.length - 1] === '"') || (v[0] === "'" && v[v.length - 1] === "'"))) {
+        v = v.slice(1, -1);
+      }
+      result[m[1]] = v;
+    }
   }
   return result;
 }

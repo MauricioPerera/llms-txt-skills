@@ -56,7 +56,12 @@ def parse_yaml_frontmatter(text: str) -> dict[str, str]:
     for line in parts[1].strip().splitlines():
         m = re.match(r"^([a-zA-Z_][a-zA-Z0-9_-]*)\s*:\s*(.*)$", line)
         if m:
-            result[m.group(1)] = m.group(2).strip().strip('"')
+            v = m.group(2).strip()
+            # strip one MATCHING pair of quotes (double or single), mirroring
+            # the CLI parser (cli/lib/core.mjs parseFrontmatter)
+            if len(v) >= 2 and v[0] == v[-1] and v[0] in ('"', "'"):
+                v = v[1:-1]
+            result[m.group(1)] = v
     return result
 
 
