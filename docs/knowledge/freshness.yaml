@@ -1,0 +1,20 @@
+# Signed knowledge freshness (RAG-OKF v2) for this publisher's bundle.
+# Checked in CI: `llms-skills freshness docs/knowledge` — see the workflow.
+#
+# DEMO trust root: the reviewer key in reviewers.json is derived from this
+# site's PUBLIC demo seed (same one that signs the skill index), so these
+# attestations demonstrate the MECHANISM, not real security. A real publisher
+# registers a private reviewer key instead.
+freshness_version: "0.1"
+
+# TTL in days per OKF type. Past its TTL without a valid attestation -> stale.
+defaults:
+  Policy: 365
+  Playbook: 90
+  Documentation: 180
+
+# abort = stale/expired knowledge FAILS the build (the honest CI gate:
+# when the attestations below expire, someone must re-review and re-attest).
+on_stale: abort
+
+require_timestamp_for_types: []

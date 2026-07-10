@@ -1,0 +1,65 @@
+{
+  "vigencia_version": "0.2",
+  "attestations": [
+    {
+      "concept": "adoption-ladder.md",
+      "content_sha256": "f1accda2830c47c8a41b17bfa00f2f1cd6d778430d2e6766ecf42200cb866c0f",
+      "statement": "vigente",
+      "attested_by": "demo:llms-txt-skills",
+      "attested_at": "2026-07-10",
+      "valid_until": "2027-07-10",
+      "signature": "6e4b618e779a3dcb579fe3c35006d6b01daccd7207700f43a053bb3ce4a07523d2d70b32a3aa66ae4e580cc64d6ffbcb208b824dda89352651c8b2833e758c03",
+      "note": "Demo attestation (public demo seed): content reviewed against spec v0.10 / ext v0.5."
+    },
+    {
+      "concept": "consuming.md",
+      "content_sha256": "faf8536e634cb6f1884d83520dc206aab09ea3054b31af154bda2e1701fd3d96",
+      "statement": "vigente",
+      "attested_by": "demo:llms-txt-skills",
+      "attested_at": "2026-07-10",
+      "valid_until": "2027-07-10",
+      "signature": "774b9a87a6bd608a119cdc73442fda42ba19491f973e5142714397f63a66780e19cb67a901615d2c561d13a995a57ebb3a509540c945d57f936ab20f0e313000",
+      "note": "Demo attestation (public demo seed): content reviewed against spec v0.10 / ext v0.5."
+    },
+    {
+      "concept": "executable-skills.md",
+      "content_sha256": "21b62992c6df6fbd7fd09ea96a107296c5f70f8752b054a7b861e1b7b7ae5ad6",
+      "statement": "vigente",
+      "attested_by": "demo:llms-txt-skills",
+      "attested_at": "2026-07-10",
+      "valid_until": "2027-07-10",
+      "signature": "054a5685529ef9c70154e240a1183cdb935e568af36df1b50f2dae37c475475ba3fe76ab3192fe85edf96e9eccf8e2674d04885a10a7c3e0f5df96dacc9eda09",
+      "note": "Demo attestation (public demo seed): content reviewed against spec v0.10 / ext v0.5."
+    },
+    {
+      "concept": "publishing.md",
+      "content_sha256": "e2255b512309210dfe6f9ce108c7c9464593a280dec0d815c61c99df5e6fd7bc",
+      "statement": "vigente",
+      "attested_by": "demo:llms-txt-skills",
+      "attested_at": "2026-07-10",
+      "valid_until": "2027-07-10",
+      "signature": "41846ab8080cd28245564ab7390da591fa60bbcca0dc94cd7c9fffe04ecd3eb2313ee8625e9dca38a691949d5de7ce4cd9c85df05ffe39beac5a93ccffe5fb0b",
+      "note": "Demo attestation (public demo seed): content reviewed against spec v0.10 / ext v0.5."
+    },
+    {
+      "concept": "trust-model.md",
+      "content_sha256": "755fe031eb76ae33054ab309cd7b64aa54227e1aa8196e9f8c4864d116970323",
+      "statement": "vigente",
+      "attested_by": "demo:llms-txt-skills",
+      "attested_at": "2026-07-10",
+      "valid_until": "2027-07-10",
+      "signature": "43033d6eaefe57fb3553a61a4df184656da9dd730b6e2aaf88e308f12ae09ad571363d0af80f10f290bd9e6b03abf44c19c4c5b4a81bc948c11f86bcddc7520e",
+      "note": "Demo attestation (public demo seed): content reviewed against spec v0.10 / ext v0.5."
+    },
+    {
+      "concept": "what-is-llms-txt-skills.md",
+      "content_sha256": "b46585b073f31f143315fabfc9eeb615b909482710e7bdeb04f75e328654ff1b",
+      "statement": "vigente",
+      "attested_by": "demo:llms-txt-skills",
+      "attested_at": "2026-07-10",
+      "valid_until": "2027-07-10",
+      "signature": "ab50ed274e409f383be0ed7dceccd3ce4f5770ffb4425399edf60e0d9913cca2021d74a72ab18050dc7315826323e61065e9da54081fdcb5387bf800a34a1f09",
+      "note": "Demo attestation (public demo seed): content reviewed against spec v0.10 / ext v0.5."
+    }
+  ]
+}

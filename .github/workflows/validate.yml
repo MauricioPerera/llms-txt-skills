@@ -56,6 +56,12 @@ jobs:
       - name: CLI publish --check (same artifacts as generate.py)
         run: node cli/bin/llms-skills.mjs publish --check --manifest scripts/skills-manifest.json --root .
 
+      # Signed knowledge freshness (RAG-OKF v2): fails when an attestation is
+      # voided by an edit, expired, or a concept goes past its TTL
+      # (docs/knowledge/freshness.yaml declares on_stale: abort).
+      - name: Knowledge freshness gate (docs publisher bundle)
+        run: node cli/bin/llms-skills.mjs freshness docs/knowledge
+
   # Self-test of the reusable GitHub Action (action.yml at the repo root):
   # runs the exact composite third-party publishers consume via
   # `uses: MauricioPerera/llms-txt-skills@master`, against this repo itself.
