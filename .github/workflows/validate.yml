@@ -62,6 +62,11 @@ jobs:
       - name: Knowledge freshness gate (docs publisher bundle)
         run: node cli/bin/llms-skills.mjs freshness docs/knowledge
 
+      # The spec proves its reference implementation conformant USING the kit
+      # third parties get: every MUST of core + ext v0.5, driven over MCP.
+      - name: Conformance kit vs published reference runtime
+        run: node conformance/run.mjs --cmd "npx -y @rckflr/mcpwasm {origin}"
+
   # Self-test of the reusable GitHub Action (action.yml at the repo root):
   # runs the exact composite third-party publishers consume via
   # `uses: MauricioPerera/llms-txt-skills@master`, against this repo itself.

@@ -123,6 +123,21 @@ La skill no inventa protocolos: usa lo que el sitio publica. Si el sitio no tien
 
 ---
 
+## Kit de conformancia (para implementadores de runtimes)
+
+> ¿Construiste tu propio runtime del estándar? Demostrá conformancia con un
+> comando: el kit levanta un publicador-fixture determinista y valida cada
+> MUST (core + Executable Skills v0.5) manejando tu runtime por MCP stdio,
+> con cita de spec por check.
+
+```bash
+node conformance/run.mjs --cmd "tu-runtime {origin}"
+```
+
+Ver [`conformance/`](conformance/). El CI de este repo corre el kit contra el
+mcpwasm publicado en cada push — la implementación de referencia demuestra su
+conformancia con la misma herramienta que reciben los terceros.
+
 ## Implementación de referencia
 
 Este repo contiene:
