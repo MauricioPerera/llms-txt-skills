@@ -1,7 +1,7 @@
 {
   "name": "@rckflr/llms-skills",
-  "version": "0.1.0",
-  "description": "One-command publisher CLI for the llms.txt Skills standard: scaffold, hash, sign, and sync the ## Skills section + .well-known/agent-skills/index.json. Byte-identical to the reference Python generator; zero dependencies.",
+  "version": "0.2.0",
+  "description": "One-command publisher CLI for the llms.txt Skills standard: scaffold, hash, sign, and sync the ## Skills section + .well-known/agent-skills/index.json. Byte-identical to the reference Python generator; zero hard dependencies (BM25 knowledge snapshots via an optional wasm engine).",
   "type": "module",
   "license": "MIT",
   "author": "Mauricio Perera <mauricio.perera@gmail.com>",
@@ -14,7 +14,16 @@
   "bugs": {
     "url": "https://github.com/MauricioPerera/llms-txt-skills/issues"
   },
-  "keywords": ["llms.txt", "agent-skills", "skills", "mcp", "publisher", "cli", "ed25519", "sha256"],
+  "keywords": [
+    "llms.txt",
+    "agent-skills",
+    "skills",
+    "mcp",
+    "publisher",
+    "cli",
+    "ed25519",
+    "sha256"
+  ],
   "engines": {
     "node": ">=18"
   },
@@ -22,11 +31,13 @@
     "llms-skills": "bin/llms-skills.mjs"
   },
   "exports": {
-    ".": "./lib/core.mjs"
+    ".": "./lib/core.mjs",
+    "./memory": "./lib/memory.mjs"
   },
   "files": [
     "bin/llms-skills.mjs",
     "lib/core.mjs",
+    "lib/memory.mjs",
     "README.md"
   ],
   "publishConfig": {
@@ -34,5 +45,8 @@
   },
   "scripts": {
     "test": "node test.mjs"
+  },
+  "optionalDependencies": {
+    "@rckflr/minimemory": "^3.2.0"
   }
 }

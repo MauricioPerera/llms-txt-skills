@@ -109,5 +109,95 @@ console.log("\nPart 3: keygen / sign / verify");
   });
 }
 
+console.log("\nPart 4: memory (RAG-OKF builder) — determinism, warnings, drift");
+{
+  const mkFixture = (dir) => {
+    mkdirSync(join(dir, "knowledge", "policies"), { recursive: true });
+    writeFileSync(join(dir, "llms.txt"), "# Demo\n\n> Demo.\n", "utf8");
+    writeFileSync(join(dir, "knowledge", "policies", "refunds.md"),
+      "---\ntype: Policy\ntitle: Refunds policy\ndescription: Refund rules.\n---\n\n# Refunds policy\n\nCustomers can request a full refund within thirty days of purchase.\nThe original receipt is required.\n", "utf8");
+    writeFileSync(join(dir, "knowledge", "shipping.md"),
+      "# Shipping\n\nStandard shipping takes five business days. Express arrives in two days.\n", "utf8");
+    writeFileSync(join(dir, "knowledge", "index.md"), "# Index\n", "utf8"); // reserved: must be skipped
+  };
+  const dirA = join(tmpdir(), "llms-mem-a-" + Date.now());
+  const dirB = join(tmpdir(), "llms-mem-b-" + Date.now());
+  try {
+    mkFixture(dirA);
+    mkFixture(dirB);
+    const runIn = (dir, cliArgs) => execFileSync("node", [BIN, ...cliArgs], { cwd: dir, encoding: "utf8" });
+
+    const outA = runIn(dirA, ["memory", "knowledge"]);
+    runIn(dirB, ["memory", "knowledge"]);
+    check("memory: snapshot build is byte-deterministic across independent runs", () => {
+      const a = readFileSync(join(dirA, "skills-index.snapshot"), "utf8");
+      const b = readFileSync(join(dirB, "skills-index.snapshot"), "utf8");
+      eq(a, b, "snapshots differ between identical builds");
+    });
+    check("memory: reserved index.md excluded; missing-type warning surfaces", () => {
+      ok(/2 concept\(s\) indexed/.test(outA), "expected exactly 2 concepts (index.md skipped)");
+      // warning goes to stderr; assert via the generated list instead:
+      const list = readFileSync(join(dirA, "skills", "list_concepts", "tool.js"), "utf8");
+      ok(!list.includes("index.md"), "index.md leaked into the concept list");
+      ok(list.includes('"type":"Documentation"'), "missing type did not default to Documentation");
+    });
+    check("memory: search_knowledge tool.js is the universal template (no publisher data)", () => {
+      const t = readFileSync(join(dirA, "skills", "search_knowledge", "tool.js"), "utf8");
+      ok(!t.includes("refunds") && !t.includes("shipping"), "universal search tool must not embed publisher content");
+    });
+    check("memory: publish + validate green over the generated artifacts", () => {
+      runIn(dirA, ["publish"]);
+      const { errors } = validateLlmsTxt(join(dirA, "llms.txt"), readFileSync(join(dirA, "llms.txt"), "utf8"));
+      eq(errors.length, 0, "validate errors: " + JSON.stringify(errors));
+      ok(/skills-memory/.test(readFileSync(join(dirA, "llms.txt"), "utf8")), "skills-memory line missing from llms.txt");
+    });
+    check("memory --check: clean right after build, drift after editing a concept", () => {
+      runIn(dirA, ["memory", "knowledge", "--check"]); // must exit 0
+      const cp = join(dirA, "knowledge", "policies", "refunds.md");
+      writeFileSync(cp, readFileSync(cp, "utf8") + "\nA new sentence changes the snapshot.\n", "utf8");
+      let threw = false;
+      try { runIn(dirA, ["memory", "knowledge", "--check"]); } catch { threw = true; }
+      ok(threw, "--check must fail after concept content changed");
+    });
+  } finally {
+    rmSync(dirA, { recursive: true, force: true });
+    rmSync(dirB, { recursive: true, force: true });
+  }
+}
+
+console.log("\nPart 5: e2e — published mcpwasm consumes the builder output (real npx)");
+{
+  const dir = join(tmpdir(), "llms-mem-e2e-" + Date.now());
+  try {
+    mkdirSync(join(dir, "knowledge"), { recursive: true });
+    writeFileSync(join(dir, "llms.txt"), "# Demo\n\n> Demo.\n", "utf8");
+    writeFileSync(join(dir, "knowledge", "refunds.md"),
+      "---\ntype: Policy\ntitle: Refunds\n---\n\nCustomers can request a full refund within thirty days of purchase.\n", "utf8");
+    execFileSync("node", [BIN, "memory", "knowledge"], { cwd: dir, encoding: "utf8" });
+    execFileSync("node", [BIN, "publish"], { cwd: dir, encoding: "utf8" });
+
+    const reqs = [
+      { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "search_knowledge", arguments: { q: "refund thirty days" } } },
+      { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "get_concept", arguments: { id: "refunds.md" } } },
+    ].map((r) => JSON.stringify(r)).join("\n") + "\n";
+    const isWin = process.platform === "win32";
+    const out = execFileSync(isWin ? "npx.cmd" : "npx", ["-y", "@rckflr/mcpwasm@0.4.0", "--serve", dir, "--port", "8979"], {
+      input: reqs, encoding: "utf8", timeout: 180000, shell: isWin,
+    });
+    const lines = out.trim().split("\n").map((l) => JSON.parse(l));
+    check("e2e: mcpwasm verifies the snapshot and search_knowledge returns the right concept", () => {
+      const hits = lines.find((l) => l.id === 1).result.structuredContent.hits;
+      ok(Array.isArray(hits) && hits.length > 0 && hits[0].concept_id === "refunds.md",
+        "expected refunds.md as top hit, got " + JSON.stringify(hits && hits[0]));
+    });
+    check("e2e: get_concept fetches the concept markdown via fetchOrigin", () => {
+      const sc = lines.find((l) => l.id === 2).result.structuredContent;
+      ok(sc.id === "refunds.md" && /thirty days/.test(sc.markdown), "concept markdown not returned correctly");
+    });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
 console.log(failures === 0 ? "\nCLI TEST: OK" : `\nCLI TEST: ${failures} failure(s)`);
 process.exit(failures === 0 ? 0 : 1);

@@ -47,6 +47,33 @@ bridge out is the host capabilities the runtime injects (`host.fetchOrigin`,
 scoped to your origin). `publish` computes `tool_sha256` and carries `tool` +
 `tool_sha256` in both the inline metadata and `index.json`.
 
+## Knowledge / serverless RAG (`memory`)
+
+Turn a directory of [OKF](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md)
+concepts (`*.md` with `type`/`title` frontmatter; `index.md`/`log.md` reserved)
+into a serverless RAG any consumer can query — no vector DB, no server:
+
+```bash
+npx @rckflr/llms-skills memory ./knowledge   # snapshot + 3 knowledge skills + manifest wiring
+npx @rckflr/llms-skills publish              # as always
+```
+
+What it generates: a **byte-deterministic** BM25 snapshot (canonicalized, so
+`--check`/CI content-addressing works), pinned by `snapshot_sha256` in the
+`skills-memory` line, plus three executable skills — `search_knowledge`
+(a **universal template**: identical bytes for every publisher, so its
+`tool_sha256` is a stable ecosystem-wide constant — audit once, attest once),
+`get_concept`, and `list_concepts` (concept metadata embedded at build time,
+content-addressed). It also pins the snapshot as `-text` in `.gitattributes`
+so git's CRLF conversion can never break the published hash.
+
+Consumers need nothing new: `npx -y @rckflr/mcpwasm <origin>` (>= 0.4.0)
+verifies the snapshot and injects `host.memorySearch` on both runtimes.
+`memory <bundle> --check` is the CI guard. The BM25 engine
+(`@rckflr/minimemory`, ~630 KB wasm) is an optionalDependency — installed by
+default; if omitted, `memory` fails with a clear message and every other
+command works as before.
+
 ## Signing / attestation (L3)
 
 ```bash

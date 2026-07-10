@@ -16,6 +16,7 @@ import {
   loadSkills, loadMemory, renderSkillsSection, renderSkillsMemoryLine, renderLlmsTxt,
   renderIndex, loadSigningKey, signSkills, publicKeyRawB64, generateKeyPair, validateLlmsTxt,
 } from "../lib/core.mjs";
+import { buildMemoryTargets } from "../lib/memory.mjs";
 
 const args = process.argv.slice(2);
 const cmd = args[0];
@@ -28,12 +29,17 @@ const USAGE = `llms-skills — publisher CLI for the llms.txt Skills standard
 
 Usage:
   llms-skills init <name> [--tool] [--root <dir>]   scaffold SKILL.md (+ tool.js) + manifest entry
+  llms-skills memory <bundle-dir> [--check] [--root <dir>] [--license <spdx>]
+                                                    OKF bundle -> BM25 snapshot + knowledge skills (RAG)
   llms-skills publish [--check] [--manifest <p>] [--root <dir>]   generate llms.txt ## Skills + index.json
   llms-skills validate <src> [--strict]             validate an llms.txt (path or URL)
   llms-skills keygen [--out <keyfile>]              generate an ed25519 signing keypair
 
 The minimal case (L0) needs no signing key and no tool.js — just init + publish.
-Add --tool for an executable skill; add a "signing" block to the manifest for L3 attestation.`;
+Add --tool for an executable skill; add a "signing" block to the manifest for L3 attestation.
+\`memory\` turns a directory of OKF concepts (*.md with type/title frontmatter) into a
+serverless RAG: a hash-pinned snapshot + search_knowledge/get_concept/list_concepts skills.
+Run \`publish\` afterwards, as always.`;
 
 function findManifest(root) {
   const cands = [flag("--manifest"), "llms-skills.json", "scripts/skills-manifest.json"].filter(Boolean);
@@ -103,6 +109,48 @@ registerTool({
     console.log(`[WRITE] llms-skills.json (added ${name})`);
   }
   console.log(`\nNext: fill in the SKILL.md${withTool ? " and tool.js" : ""}, then run  llms-skills publish`);
+}
+
+// ---- memory (RAG-OKF builder) ----
+async function cmdMemory() {
+  const bundleArg = args[1];
+  if (!bundleArg || bundleArg.startsWith("--")) die("memory: needs a bundle directory, e.g. `llms-skills memory ./knowledge`");
+  const root = flag("--root") || process.cwd();
+  const bundleDir = join(root, bundleArg) === bundleArg ? bundleArg : join(root, bundleArg);
+  if (!existsSync(bundleDir)) die(`memory: bundle directory not found: ${bundleDir}`);
+
+  const manifestPath = findManifest(root) || join(root, "llms-skills.json");
+  const manifest = existsSync(manifestPath)
+    ? JSON.parse(readFileSync(manifestPath, "utf8"))
+    : { section_intro: "Remote Agent Skills published by this domain.", published: [] };
+
+  const { targets, warnings, manifest: newManifest, snapshotSha, conceptCount } =
+    await buildMemoryTargets({ root, bundleDir, manifest, license: flag("--license") });
+  for (const w of warnings) console.error(`[warn] ${w}`);
+
+  const rel = (p) => (relative(root, p) || p).replaceAll("\\", "/");
+  const norm = (s) => s.replaceAll("\r\n", "\n");
+  const manifestContent = JSON.stringify(newManifest, null, 2) + "\n";
+  const all = [...targets, [manifestPath, manifestContent]];
+
+  if (has("--check")) {
+    const drift = all.filter(([p, c]) => (existsSync(p) ? norm(readFileSync(p, "utf8")) : null) !== norm(c));
+    if (drift.length) {
+      console.error("[DRIFT] Out-of-date memory artifacts. Run: llms-skills memory " + bundleArg);
+      for (const [p] of drift) console.error(`  - ${rel(p)}`);
+      process.exit(1);
+    }
+    console.log(`[OK] Memory in sync (${conceptCount} concepts, snapshot ${snapshotSha.slice(0, 12)}…).`);
+    return;
+  }
+
+  for (const [p, c] of all) {
+    mkdirSync(dirname(p), { recursive: true });
+    writeFileSync(p, c, "utf8");
+    console.log(`[WRITE] ${rel(p)}`);
+  }
+  console.log(`\n${conceptCount} concept(s) indexed; snapshot sha256 ${snapshotSha.slice(0, 12)}…`);
+  console.log("Next: run  llms-skills publish  to emit the skills-memory line and hash the tools.");
 }
 
 // ---- publish ----
@@ -193,6 +241,7 @@ function cmdKeygen() {
   try {
     switch (cmd) {
       case "init": cmdInit(); break;
+      case "memory": await cmdMemory(); break;
       case "publish": cmdPublish(); break;
       case "validate": await cmdValidate(); break;
       case "keygen": cmdKeygen(); break;
