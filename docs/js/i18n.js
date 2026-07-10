@@ -87,6 +87,13 @@
       "evidence.stat4Sub": "image API, storefront, wireframe validator",
       "evidence.disclaimer__html": "Small-N proof of mechanism, not a benchmark — all 3 sites are first-party. Full methodology, caveats, and raw data in <a href=\"https://github.com/MauricioPerera/llms-txt-skills/blob/master/evals/results.md\">evals/results.md</a>.",
 
+      "publishers.h2": "Live publishers you can consume right now",
+      "publishers.lede__html": "Seven first-party origins dogfood the full stack — <code>## Skills</code>, hash-pinned BM25 knowledge, executable tools, SKILL.md recipes, signed index. The root origin is directly consumable (<code>npx -y @rckflr/mcpwasm https://mauricioperera.github.io</code>); project pages are consumed via clone + <code>--serve</code> (RFC v0.9 OQ6).",
+      "publishers.root": "root origin: site_facts + the standard's own skills, live-consumable",
+      "publishers.own": "this spec: 4 skills incl. a custom validator + 6-concept knowledge bundle",
+      "publishers.kdd": "a real pre-existing OKF bundle, 40 concepts",
+      "publishers.family": "the KDD methodology family, each publishing its own specs as searchable skills",
+
       "compare.h2": "Where this fits",
       "compare.lede": "This does not replace MCP or A2A — it fills the gap below them: publishing a skill for a simple API or static site, with no server to run.",
       "compare.rowServer": "Requires a running server",
@@ -209,6 +216,13 @@
       "evidence.stat4Sub": "API de imágenes, tienda, validador de wireframes",
       "evidence.disclaimer__html": "Prueba de mecanismo con n chico, no un benchmark — los 3 sitios son del mismo autor. Metodología completa, salvedades, y datos crudos en <a href=\"https://github.com/MauricioPerera/llms-txt-skills/blob/master/evals/results.md\">evals/results.md</a>.",
 
+      "publishers.h2": "Publicadores vivos que podés consumir ya",
+      "publishers.lede__html": "Siete origins first-party dogfoodean el stack completo — <code>## Skills</code>, conocimiento BM25 fijado por hash, tools ejecutables, recetas SKILL.md, índice firmado. El origin raíz es consumible directo (<code>npx -y @rckflr/mcpwasm https://mauricioperera.github.io</code>); las project pages se consumen con clone + <code>--serve</code> (RFC v0.9 OQ6).",
+      "publishers.root": "origin raíz: site_facts + las skills del propio estándar, consumible en vivo",
+      "publishers.own": "esta spec: 4 skills (incl. un validador custom) + bundle de conocimiento de 6 conceptos",
+      "publishers.kdd": "un bundle OKF real preexistente, 40 conceptos",
+      "publishers.family": "la familia de metodologías KDD, cada una publicando sus propias specs como skills buscables",
+
       "compare.h2": "Dónde encaja esto",
       "compare.lede": "Esto no reemplaza a MCP ni A2A — llena el hueco debajo de ellos: publicar una skill para una API simple o un sitio estático, sin servidor que correr.",
       "compare.rowServer": "Requiere un servidor corriendo",
@@ -330,6 +344,13 @@
       "evidence.stat4Label": "cenários × sites",
       "evidence.stat4Sub": "API de imagens, loja, validador de wireframes",
       "evidence.disclaimer__html": "Prova de mecanismo com n pequeno, não um benchmark — os 3 sites são do mesmo autor. Metodologia completa, ressalvas e dados brutos em <a href=\"https://github.com/MauricioPerera/llms-txt-skills/blob/master/evals/results.md\">evals/results.md</a>.",
+
+      "publishers.h2": "Publicadores ao vivo que você pode consumir agora",
+      "publishers.lede__html": "Sete origins first-party fazem dogfood do stack completo — <code>## Skills</code>, conhecimento BM25 fixado por hash, tools executáveis, receitas SKILL.md, índice assinado. A origin raiz é consumível direto (<code>npx -y @rckflr/mcpwasm https://mauricioperera.github.io</code>); as project pages são consumidas com clone + <code>--serve</code> (RFC v0.9 OQ6).",
+      "publishers.root": "origin raiz: site_facts + as skills do próprio padrão, consumível ao vivo",
+      "publishers.own": "esta spec: 4 skills (incl. um validador custom) + bundle de conhecimento de 6 conceitos",
+      "publishers.kdd": "um bundle OKF real preexistente, 40 conceitos",
+      "publishers.family": "a família de metodologias KDD, cada uma publicando suas próprias specs como skills pesquisáveis",
 
       "compare.h2": "Onde isso se encaixa",
       "compare.lede": "Isso não substitui MCP nem A2A — preenche a lacuna abaixo deles: publicar uma skill para uma API simples ou um site estático, sem servidor para rodar.",
