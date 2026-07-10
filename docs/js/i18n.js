@@ -108,6 +108,7 @@
       "compare.oneOnly": "No (one only)",
 
       "quickstart.h2": "Adopt it in 3 steps",
+      "quickstart.template__html": "Fastest path: the <a href=\"https://github.com/MauricioPerera/llms-skills-template\">GitHub template</a> — a working publisher out of the box (example knowledge bundle, generated skills, validation CI). Click <em>Use this template</em>, replace <code>knowledge/</code>, run two commands.",
       "quickstart.sub0": "The one-command way (CLI)",
       "quickstart.sub1": "1. Or add the section to your llms.txt by hand",
       "quickstart.sub2": "2. Write the SKILL.md",
@@ -237,6 +238,7 @@
       "compare.oneOnly": "No (solo una)",
 
       "quickstart.h2": "Adoptalo en 3 pasos",
+      "quickstart.template__html": "El camino más rápido: la <a href=\"https://github.com/MauricioPerera/llms-skills-template\">plantilla de GitHub</a> — un publicador funcional desde el minuto cero (bundle de conocimiento de ejemplo, skills generadas, CI de validación). Click en <em>Use this template</em>, reemplazá <code>knowledge/</code>, corré dos comandos.",
       "quickstart.sub0": "La vía de un comando (CLI)",
       "quickstart.sub1": "1. O agregá la sección a tu llms.txt a mano",
       "quickstart.sub2": "2. Escribí el SKILL.md",
@@ -366,6 +368,7 @@
       "compare.oneOnly": "Não (só uma)",
 
       "quickstart.h2": "Adote em 3 passos",
+      "quickstart.template__html": "O caminho mais rápido: o <a href=\"https://github.com/MauricioPerera/llms-skills-template\">template do GitHub</a> — um publicador funcional desde o primeiro minuto (bundle de conhecimento de exemplo, skills geradas, CI de validação). Clique em <em>Use this template</em>, substitua <code>knowledge/</code>, rode dois comandos.",
       "quickstart.sub0": "O caminho de um comando (CLI)",
       "quickstart.sub1": "1. Ou adicione a seção ao seu llms.txt manualmente",
       "quickstart.sub2": "2. Escreva o SKILL.md",
