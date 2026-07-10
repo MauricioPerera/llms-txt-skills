@@ -229,6 +229,12 @@ El RFC §5.1 documenta 4 mecanismos de descubrimiento (HTTP Link header, DNS TXT
 
 ## Cómo adoptar el estándar en tu dominio (3 pasos)
 
+> **El camino más rápido: la [plantilla de GitHub](https://github.com/MauricioPerera/llms-skills-template).**
+> Un publicador funcional desde el minuto cero — bundle de conocimiento de
+> ejemplo, skills generadas y CI de validación incluidos. Click en *Use this
+> template*, reemplazá `knowledge/`, corré dos comandos. Los 3 pasos de abajo
+> son el mismo flujo, hecho a mano.
+
 > **El caso mínimo (L0) es una sola línea.** Agregar la sección `## Skills` a tu
 > `llms.txt` (Paso 1) + un `SKILL.md` (Paso 2) ya te hace descubrible — nada más
 > es obligatorio. El `sha256`, la firma, `tool.js` e `index.json` son
