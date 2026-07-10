@@ -4,7 +4,7 @@ All notable changes to the [`@rckflr/llms-skills`](https://www.npmjs.com/package
 package. Format based on [Keep a Changelog](https://keepachangelog.com/); dates
 are the npm publish dates.
 
-## [Unreleased] — 0.3.0
+## [0.3.0] — 2026-07-10
 
 ### Added
 - **`--scope <name>` on `memory`** (Executable Skills v0.5 §2.5, resolves
