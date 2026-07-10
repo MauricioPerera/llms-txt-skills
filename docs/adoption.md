@@ -90,6 +90,28 @@ Your `llms.txt` is the **source of truth**. `index.json` and the `.well-known` c
 | llms.txt (AnswerDotAI) | https://github.com/AnswerDotAI/llms-txt/issues/116 | Open; minimal ask = register `## Skills` as a convention |
 | Agent Skills (agentskills) | https://github.com/agentskills/agentskills/discussions/329 | Active; trust + cost feedback addressed |
 
+## Composing with `auth.md` (credential acquisition)
+
+`## Skills` answers *"what can an agent do here, and how?"*. The
+[auth.md protocol](https://github.com/workos/auth.md) (WorkOS — third-party
+spec) answers the adjacent question: *"how does an agent register and get
+credentials?"*. They do not overlap; they compose:
+
+- Serve your `auth.md` at your origin and list it in `## Skills` as a
+  **prose skill** (a plain link entry — reference-by-pointer, fetched on
+  demand, never copied to disk, so the live document stays authoritative):
+
+  ```markdown
+  - [authenticate](/auth.md): How agents authenticate with this service. <!-- skill: {"version":"1.0.0"} -->
+  ```
+
+- Origins with no auth story should say so explicitly — an `auth.md`
+  declaring "none required" saves agents a discovery round-trip.
+
+Live example: <https://mauricioperera.github.io/auth.md>, discovered from
+that origin's `llms.txt`. Discussed with the auth.md authors in
+[workos/auth.md#7](https://github.com/workos/auth.md/issues/7).
+
 ## Reproduce the discovery flow
 
 Against the live reference site:
