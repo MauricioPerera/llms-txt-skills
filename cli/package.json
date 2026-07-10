@@ -35,6 +35,7 @@
     "./memory": "./lib/memory.mjs"
   },
   "files": [
+    "CHANGELOG.md",
     "bin/llms-skills.mjs",
     "lib/core.mjs",
     "lib/memory.mjs",
