@@ -42,6 +42,8 @@ WELL_KNOWN_DEFAULT = REPO_ROOT / ".well-known" / "skills" / "default" / "SKILL.m
 AGENT_SKILLS_INDEX = REPO_ROOT / ".well-known" / "agent-skills" / "index.json"
 SIGNING_KEY_PUB = REPO_ROOT / ".well-known" / "agent-skills" / "signing-key.pub"
 
+SCOPE_RE = re.compile(r"^[a-z][a-z0-9_-]*$")  # Executable Skills v0.5 SS2.5
+
 REQUIRED_FRONTMATTER = ("name", "description", "version", "license")
 
 
@@ -101,6 +103,10 @@ def load_skills(manifest: dict[str, Any]) -> list[dict[str, Any]]:
             tool_url = entry["tool_url"]
             tool_sha256 = sha256_normalized(tool_path)
 
+        if entry.get("scope") is not None and not SCOPE_RE.match(str(entry["scope"])):
+            raise ValueError(
+                f"{entry['path']}: 'scope' invalido (patron ^[a-z][a-z0-9_-]*$, Executable Skills v0.5 SS2.5)"
+            )
         skills.append(
             {
                 "name": fm["name"],
@@ -114,6 +120,7 @@ def load_skills(manifest: dict[str, Any]) -> list[dict[str, Any]]:
                 "path": path,
                 "tool_url": tool_url,
                 "tool_sha256": tool_sha256,
+                "scope": str(entry["scope"]) if entry.get("scope") is not None else None,
             }
         )
     return skills
@@ -135,10 +142,13 @@ def load_memory(manifest: dict[str, Any]) -> dict[str, Any] | None:
     snapshot_path = REPO_ROOT / memory["snapshot_path"]
     if not snapshot_path.exists():
         raise FileNotFoundError(f"snapshot no encontrado: {memory['snapshot_path']}")
+    if memory.get("scope") is not None and not SCOPE_RE.match(str(memory["scope"])):
+        raise ValueError("manifest['memory']: 'scope' invalido (patron ^[a-z][a-z0-9_-]*$, Executable Skills v0.5 SS2.5)")
     return {
         "snapshot_url": memory["snapshot_url"],
         "format": memory["format"],
         "snapshot_sha256": sha256_normalized(snapshot_path),
+        "scope": str(memory["scope"]) if memory.get("scope") is not None else None,
     }
 
 
@@ -151,6 +161,8 @@ def render_skills_memory_line(memory: dict[str, Any] | None) -> str:
         "snapshot_sha256": memory["snapshot_sha256"],
         "format": memory["format"],
     }
+    if memory.get("scope"):
+        meta["scope"] = memory["scope"]
     meta_json = json.dumps(meta, separators=(",", ":"), ensure_ascii=False)
     return f"<!-- skills-memory: {meta_json} -->\n\n"
 
@@ -168,6 +180,8 @@ def render_skills_section(manifest: dict[str, Any], skills: list[dict[str, Any]]
         if s.get("tool_url") and s.get("tool_sha256"):
             meta["tool"] = s["tool_url"]
             meta["tool_sha256"] = s["tool_sha256"]
+        if s.get("scope"):
+            meta["scope"] = s["scope"]
         meta_json = json.dumps(meta, separators=(",", ":"), ensure_ascii=False)
         lines.append(
             f"- [{s['name']}]({s['url']}): {s['summary']} <!-- skill: {meta_json} -->"

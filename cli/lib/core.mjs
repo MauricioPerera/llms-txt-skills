@@ -46,6 +46,9 @@ export function parseFrontmatter(text) {
 
 const REQUIRED_FRONTMATTER = ["name", "description", "version", "license"];
 
+// Executable Skills v0.5 SS2.5: namespace declarativo para origins multi-proyecto.
+const SCOPE_RE = /^[a-z][a-z0-9_-]*$/;
+
 // ---- load skills from a manifest (mirrors generate.py load_skills) ----
 export function loadSkills(manifest, repoRoot) {
   const skills = [];
@@ -64,10 +67,14 @@ export function loadSkills(manifest, repoRoot) {
       toolUrl = entry.tool_url;
       toolSha256 = sha256NormalizedFile(toolPath);
     }
+    if (entry.scope !== undefined && !SCOPE_RE.test(String(entry.scope))) {
+      throw new Error(`${entry.path}: invalid 'scope' (pattern ^[a-z][a-z0-9_-]*$, Executable Skills v0.5 §2.5)`);
+    }
     skills.push({
       name: fm.name, description: fm.description, version: fm.version, license: fm.license,
       homepage: fm.homepage || null, url: entry.url, summary: entry.summary,
       sha256: sha256NormalizedFile(path), path, toolUrl, toolSha256,
+      scope: entry.scope !== undefined ? String(entry.scope) : null,
     });
   }
   return skills;
@@ -81,7 +88,14 @@ export function loadMemory(manifest, repoRoot) {
   }
   const snapshotPath = join(repoRoot, memory.snapshot_path);
   if (!existsSync(snapshotPath)) throw new Error(`snapshot not found: ${memory.snapshot_path}`);
-  return { snapshot_url: memory.snapshot_url, format: memory.format, snapshot_sha256: sha256NormalizedFile(snapshotPath) };
+  if (memory.scope !== undefined && !SCOPE_RE.test(String(memory.scope))) {
+    throw new Error("manifest.memory: invalid 'scope' (pattern ^[a-z][a-z0-9_-]*$, Executable Skills v0.5 §2.5)");
+  }
+  return {
+    snapshot_url: memory.snapshot_url, format: memory.format,
+    snapshot_sha256: sha256NormalizedFile(snapshotPath),
+    scope: memory.scope !== undefined ? String(memory.scope) : null,
+  };
 }
 
 // ---- render: ## Skills section (compact JSON, exact key order of generate.py) ----
@@ -90,6 +104,7 @@ export function renderSkillsSection(manifest, skills) {
   for (const s of skills) {
     const meta = { version: s.version, license: s.license, sha256: s.sha256 };
     if (s.toolUrl && s.toolSha256) { meta.tool = s.toolUrl; meta.tool_sha256 = s.toolSha256; }
+    if (s.scope) meta.scope = s.scope;
     lines.push(`- [${s.name}](${s.url}): ${s.summary} <!-- skill: ${JSON.stringify(meta)} -->`);
   }
   return lines.join("\n") + "\n";
@@ -98,6 +113,7 @@ export function renderSkillsSection(manifest, skills) {
 export function renderSkillsMemoryLine(memory) {
   if (!memory) return "";
   const meta = { snapshot: memory.snapshot_url, snapshot_sha256: memory.snapshot_sha256, format: memory.format };
+  if (memory.scope) meta.scope = memory.scope;
   return `<!-- skills-memory: ${JSON.stringify(meta)} -->\n\n`;
 }
 
@@ -191,9 +207,20 @@ export function validateLlmsTxt(source, text) {
   const err = (message, line = "") => errors.push({ message, line });
   const warn = (message, line = "") => warnings.push({ message, line });
 
-  // origin memory line (optional)
-  const memMatch = text.split(/\r?\n/).map((l) => l.trim().match(MEMORY_CAPTURE_RE)).find(Boolean);
-  if (memMatch) validateMemory(memMatch[1], source, err, warn);
+  // origin memory lines (optional; Executable Skills v0.5 SS2.5: one per
+  // scope, at most one without scope)
+  const memScopes = [];
+  for (const l of text.split(/\r?\n/)) {
+    const memMatch = l.trim().match(MEMORY_CAPTURE_RE);
+    if (!memMatch) continue;
+    const scopeKey = validateMemory(memMatch[1], source, err, warn);
+    if (scopeKey === undefined) continue; // JSON invalido, ya reportado
+    if (memScopes.includes(scopeKey)) {
+      err(scopeKey === ""
+        ? "skills-memory: more than one line without 'scope' (at most one allowed)"
+        : `skills-memory: duplicate line for scope '${scopeKey}'`);
+    } else memScopes.push(scopeKey);
+  }
 
   // find ## Skills section
   const lines = text.split(/\r?\n/);
@@ -238,6 +265,8 @@ export function validateLlmsTxt(source, text) {
         if (hasToolSha && !hasTool) err("'tool_sha256' declared without 'tool' (both required together)", raw.slice(0, 80));
         if (hasToolSha && !/^[a-fA-F0-9]{64}$/.test(String(metaParsed.tool_sha256)))
           err("Invalid tool_sha256 (must be 64 hex chars)", raw.slice(0, 80));
+        if ("scope" in metaParsed && !SCOPE_RE.test(String(metaParsed.scope)))
+          err("Invalid 'scope' (pattern ^[a-z][a-z0-9_-]*$, Executable Skills v0.5 §2.5)", raw.slice(0, 80));
       } catch (e) { err(`Invalid metadata JSON: ${e.message}`, raw.slice(0, 80)); }
     }
     const resolved = resolveSkillPath(url, source);
@@ -272,12 +301,15 @@ const MEMORY_CAPTURE_RE = /^<!--\s*skills-memory:\s*(.*?)\s*-->\s*$/;
 function validateMemory(memJson, source, err, warn) {
   let meta;
   try { meta = JSON.parse(memJson); }
-  catch (e) { err(`skills-memory: invalid JSON: ${e.message}`); return; }
+  catch (e) { err(`skills-memory: invalid JSON: ${e.message}`); return undefined; }
+  const scopeKey = meta.scope === undefined ? "" : String(meta.scope);
+  if (meta.scope !== undefined && !SCOPE_RE.test(String(meta.scope)))
+    err(`skills-memory: invalid 'scope' (pattern ^[a-z][a-z0-9_-]*$, Executable Skills v0.5 §2.5)`);
   let ok = true;
   for (const key of ["snapshot", "snapshot_sha256", "format"]) {
     if (typeof meta[key] !== "string") { err(`skills-memory: missing or invalid '${key}' (must be string)`); ok = false; }
   }
-  if (!ok) return;
+  if (!ok) return scopeKey;
   if (!/^[a-fA-F0-9]{64}$/.test(meta.snapshot_sha256)) err("skills-memory: invalid snapshot_sha256 (must be 64 hex chars)");
   if (meta.format !== "minimemory-okf-v1") warn(`skills-memory: format '${meta.format}' is not the only one recognized today (minimemory-okf-v1)`);
   const resolved = resolveSkillPath(meta.snapshot, source);
@@ -288,4 +320,5 @@ function validateMemory(memJson, source, err, warn) {
       if (actual !== meta.snapshot_sha256) err(`skills-memory: snapshot_sha256 mismatch: declared ${meta.snapshot_sha256}, actual ${actual}`);
     }
   }
+  return scopeKey;
 }

@@ -199,5 +199,67 @@ console.log("\nPart 5: e2e — published mcpwasm consumes the builder output (re
   }
 }
 
+console.log("\nPart 6: scopes (Executable Skills v0.5 §2.5) — --scope wiring + generate.py mirror");
+{
+  const dir = join(tmpdir(), "llms-scope-" + Date.now());
+  try {
+    mkdirSync(join(dir, "knowledge"), { recursive: true });
+    writeFileSync(join(dir, "llms.txt"), "# Demo\n\n> Demo.\n", "utf8");
+    writeFileSync(join(dir, "knowledge", "refunds.md"),
+      "---\ntype: Policy\ntitle: Refunds\n---\n\nCustomers can request a full refund within thirty days of purchase.\n", "utf8");
+    const runIn = (cliArgs) => execFileSync("node", [BIN, ...cliArgs], { cwd: dir, encoding: "utf8" });
+
+    runIn(["memory", "knowledge", "--scope", "kdd"]);
+    runIn(["publish"]);
+
+    check("scope: manifest carries scope on memory and on every generated entry", () => {
+      const mf = JSON.parse(readFileSync(join(dir, "llms-skills.json"), "utf8"));
+      eq(mf.memory.scope, "kdd", "manifest.memory.scope");
+      ok(mf.published.length === 3 && mf.published.every((e) => e.scope === "kdd"),
+        "every published entry must carry scope kdd");
+    });
+    check("scope: llms.txt lines carry scope as the LAST key (skill + memory)", () => {
+      const txt = readFileSync(join(dir, "llms.txt"), "utf8");
+      ok(/"format":"minimemory-okf-v1","scope":"kdd"\}/.test(txt), "memory line: scope must be last key");
+      const skillLines = txt.split(/\r?\n/).filter((l) => /<!-- skill:/.test(l));
+      eq(skillLines.length, 3, "expected 3 skill lines");
+      ok(skillLines.every((l) => /"tool_sha256":"[0-9a-f]{64}","scope":"kdd"\}/.test(l)),
+        "each skill line: scope must follow tool_sha256");
+    });
+    check("scope: validate is green over the scoped output", () => {
+      const { errors } = validateLlmsTxt(join(dir, "llms.txt"), readFileSync(join(dir, "llms.txt"), "utf8"));
+      eq(errors.length, 0, "validate errors: " + JSON.stringify(errors));
+    });
+    check("scope: validate rejects an invalid scope and duplicated memory scopes", () => {
+      const bad = "<!-- skills-memory: {\"snapshot\":\"/s\",\"snapshot_sha256\":\"" + "a".repeat(64) + "\",\"format\":\"minimemory-okf-v1\",\"scope\":\"KDD\"} -->\n" +
+        "<!-- skills-memory: {\"snapshot\":\"https://x/s\",\"snapshot_sha256\":\"" + "a".repeat(64) + "\",\"format\":\"minimemory-okf-v1\",\"scope\":\"kdd\"} -->\n" +
+        "<!-- skills-memory: {\"snapshot\":\"https://x/s2\",\"snapshot_sha256\":\"" + "b".repeat(64) + "\",\"format\":\"minimemory-okf-v1\",\"scope\":\"kdd\"} -->\n" +
+        "\n## Skills\n\n- [a](https://x/SKILL.md): does something useful indeed. <!-- skill: {\"version\":\"1.0.0\",\"tool\":\"https://x/t.js\",\"tool_sha256\":\"" + "c".repeat(64) + "\",\"scope\":\"Bad Scope\"} -->\n";
+      const { errors } = validateLlmsTxt("https://example.com/llms.txt", bad);
+      ok(errors.some((e) => /skills-memory: invalid 'scope'/.test(e.message)), "uppercase memory scope must error");
+      ok(errors.some((e) => /duplicate line for scope 'kdd'/.test(e.message)), "duplicated scope must error");
+      ok(errors.some((e) => /Invalid 'scope'/.test(e.message)), "invalid skill-line scope must error");
+    });
+    check("scope: byte-identity with generate.py on the scoped fixture", () => {
+      // Mirror harness: generate.py resolves everything from its own location
+      // (scripts/ inside the publisher root), so copy it into the fixture and
+      // let it re-render the SAME manifest the CLI just wired.
+      mkdirSync(join(dir, "scripts"), { recursive: true });
+      writeFileSync(join(dir, "scripts", "generate.py"), readFileSync(join(REPO, "scripts", "generate.py"), "utf8"), "utf8");
+      const mf = JSON.parse(readFileSync(join(dir, "llms-skills.json"), "utf8"));
+      // generate.py requires default_skill (name from SKILL.md frontmatter);
+      // the CLI has no such concept — set it only for the mirror run.
+      mf.default_skill = "search_knowledge";
+      writeFileSync(join(dir, "scripts", "skills-manifest.json"), JSON.stringify(mf, null, 2) + "\n", "utf8");
+      const cliLlms = norm(readFileSync(join(dir, "llms.txt"), "utf8"));
+      execFileSync("python", [join(dir, "scripts", "generate.py")], { cwd: dir, encoding: "utf8" });
+      const pyLlms = norm(readFileSync(join(dir, "llms.txt"), "utf8"));
+      eq(pyLlms, cliLlms, "generate.py re-render must be byte-identical to the CLI output");
+    });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
 console.log(failures === 0 ? "\nCLI TEST: OK" : `\nCLI TEST: ${failures} failure(s)`);
 process.exit(failures === 0 ? 0 : 1);

@@ -29,7 +29,7 @@ const USAGE = `llms-skills — publisher CLI for the llms.txt Skills standard
 
 Usage:
   llms-skills init <name> [--tool] [--root <dir>]   scaffold SKILL.md (+ tool.js) + manifest entry
-  llms-skills memory <bundle-dir> [--check] [--root <dir>] [--license <spdx>]
+  llms-skills memory <bundle-dir> [--check] [--root <dir>] [--license <spdx>] [--scope <name>]
                                                     OKF bundle -> BM25 snapshot + knowledge skills (RAG)
   llms-skills publish [--check] [--manifest <p>] [--root <dir>]   generate llms.txt ## Skills + index.json
   llms-skills validate <src> [--strict]             validate an llms.txt (path or URL)
@@ -125,7 +125,7 @@ async function cmdMemory() {
     : { section_intro: "Remote Agent Skills published by this domain.", published: [] };
 
   const { targets, warnings, manifest: newManifest, snapshotSha, conceptCount } =
-    await buildMemoryTargets({ root, bundleDir, manifest, license: flag("--license") });
+    await buildMemoryTargets({ root, bundleDir, manifest, license: flag("--license"), scope: flag("--scope") });
   for (const w of warnings) console.error(`[warn] ${w}`);
 
   const rel = (p) => (relative(root, p) || p).replaceAll("\\", "/");

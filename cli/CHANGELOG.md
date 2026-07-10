@@ -4,6 +4,41 @@ All notable changes to the [`@rckflr/llms-skills`](https://www.npmjs.com/package
 package. Format based on [Keep a Changelog](https://keepachangelog.com/); dates
 are the npm publish dates.
 
+## [Unreleased] — 0.3.0
+
+### Added
+- **`--scope <name>` on `memory`** (Executable Skills v0.5 §2.5, resolves
+  core RFC v0.10 Open Question 6). Declares the project namespace for
+  multi-project origins: the manifest's `memory` block and every generated
+  `published` entry carry `scope`, and `publish` renders it as the **last**
+  key of both the skill lines and the `skills-memory` line
+  (`"scope":"kdd"`). Runtimes (mcpwasm ≥ 0.6.0) expose the tools as
+  `<scope>__<toolName>` and bind each scope's memory to its own snapshot.
+  Pattern `^[a-z][a-z0-9_-]*$`; invalid values fail fast. Re-running
+  `memory` with a different `--scope` (or none) refreshes the manifest
+  entries idempotently.
+- `validate` understands scopes: accepts multiple `skills-memory` lines when
+  each carries a distinct `scope` (at most one unscoped), and reports invalid
+  `scope` values and duplicated scopes as errors.
+- New test part: scoped fixture end-to-end (manifest wiring, key order,
+  validate, and **byte-identity with `scripts/generate.py`** on scoped
+  output — the mirror contract now covers scopes).
+
+### Changed
+- `scripts/generate.py` mirrored: manifest entries and the `memory` block
+  accept `scope` and render it identically (byte-identity enforced by
+  `cli/test.mjs` Part 6). No `scope` anywhere ⇒ output identical to 0.2.1.
+
+## [0.2.1] — 2026-07-10
+
+### Fixed
+- **Frontmatter values quoted with single quotes** (`type: 'Concept'`) are now
+  unquoted correctly: one *matching* pair of quotes (double or single) is
+  stripped. Found with a real OKF bundle (KDD) whose frontmatter uses single
+  quotes; before this fix the quotes leaked into concept `type`/`title`.
+  Mirrored in `scripts/generate.py` (`parse_yaml_frontmatter`) — byte-identity
+  between both generators re-verified.
+
 ## [0.2.0] — 2026-07-10
 
 ### Added

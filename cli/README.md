@@ -67,6 +67,21 @@ What it generates: a **byte-deterministic** BM25 snapshot (canonicalized, so
 content-addressed). It also pins the snapshot as `-text` in `.gitattributes`
 so git's CRLF conversion can never break the published hash.
 
+**Multi-project origins (scopes).** Publishing several projects on one origin
+(e.g. a GitHub Pages root)? Add `--scope <name>` (pattern
+`^[a-z][a-z0-9_-]*$`, Executable Skills v0.5 §2.5):
+
+```bash
+npx @rckflr/llms-skills memory ./knowledge --scope kdd
+```
+
+The manifest and the rendered lines carry `"scope":"kdd"`; runtimes
+(mcpwasm ≥ 0.6.0) expose the tools as `kdd__search_knowledge` etc. and bind
+each scope's memory to its own snapshot — no name collisions, one
+`skills-memory` line per scope. Published bytes and hashes are untouched
+(the rename is runtime-side), so `search_knowledge` stays the universal
+template.
+
 Consumers need nothing new: `npx -y @rckflr/mcpwasm <origin>` (>= 0.4.0)
 verifies the snapshot and injects `host.memorySearch` on both runtimes.
 `memory <bundle> --check` is the CI guard. The BM25 engine

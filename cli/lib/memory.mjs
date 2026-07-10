@@ -192,7 +192,11 @@ runtime executes it verbatim in a sandbox.
 // ---- orchestrator --------------------------------------------------------------
 // Builds everything under `root`. Returns { targets, warnings, snapshotSha, manifest }
 // where targets is [path, content] pairs (the caller writes or checks them).
-export async function buildMemoryTargets({ root, bundleDir, manifest, license }) {
+export async function buildMemoryTargets({ root, bundleDir, manifest, license, scope }) {
+  // Executable Skills v0.5 SS2.5: namespace declarativo para origins multi-proyecto.
+  if (scope !== undefined && scope !== null && !/^[a-z][a-z0-9_-]*$/.test(String(scope))) {
+    throw new Error("memory: invalid --scope (pattern ^[a-z][a-z0-9_-]*$, Executable Skills v0.5 §2.5)");
+  }
   const bundleRel = relative(root, bundleDir).replaceAll("\\", "/");
   if (bundleRel.startsWith("..")) {
     throw new Error("memory: the bundle must live inside the publisher root (it is served as static content)");
@@ -236,17 +240,26 @@ export async function buildMemoryTargets({ root, bundleDir, manifest, license })
     snapshot_url: "/skills-index.snapshot",
     format: SNAPSHOT_FORMAT,
   };
+  if (scope) newManifest.memory.scope = String(scope);
+  else delete newManifest.memory.scope;
   if (!Array.isArray(newManifest.published)) newManifest.published = [];
   for (const [name, , summary] of SKILLS) {
     const path = `skills/${name}/SKILL.md`;
-    if (!newManifest.published.some((e) => e && e.path === path)) {
-      newManifest.published.push({
+    const existing = newManifest.published.find((e) => e && e.path === path);
+    if (!existing) {
+      const entry = {
         path,
         url: `/skills/${name}/SKILL.md`,
         summary,
         tool: `skills/${name}/tool.js`,
         tool_url: `/skills/${name}/tool.js`,
-      });
+      };
+      if (scope) entry.scope = String(scope);
+      newManifest.published.push(entry);
+    } else if (scope) {
+      existing.scope = String(scope); // re-run con --scope: refresca el namespace
+    } else {
+      delete existing.scope; // re-run sin --scope: vuelve al default global
     }
   }
 
