@@ -101,10 +101,11 @@
       "compare.oneOnly": "No (one only)",
 
       "quickstart.h2": "Adopt it in 3 steps",
-      "quickstart.sub1": "1. Add the section to your llms.txt",
+      "quickstart.sub0": "The one-command way (CLI)",
+      "quickstart.sub1": "1. Or add the section to your llms.txt by hand",
       "quickstart.sub2": "2. Write the SKILL.md",
       "quickstart.sub3": "3. Or install the consumer skill (Claude Code)",
-      "quickstart.disclaimer__html": "The generator (<code>scripts/generate.py</code>) computes the sha256, syncs <code>.well-known</code>, and signs — so this never has to be done by hand. Full guide in the <a href=\"https://github.com/MauricioPerera/llms-txt-skills#readme\">README</a>.",
+      "quickstart.disclaimer__html": "The CLI (<a href=\"https://www.npmjs.com/package/@rckflr/llms-skills\"><code>@rckflr/llms-skills</code></a>) computes the sha256, syncs <code>.well-known/agent-skills/index.json</code>, and signs — so none of it is done by hand. In CI, a reusable GitHub Action (<code>uses: MauricioPerera/llms-txt-skills@master</code>) fails the build if what you serve drifts from your sources. Full guide in the <a href=\"https://github.com/MauricioPerera/llms-txt-skills#readme\">README</a>.",
 
       "bridge.h2": "From a static site to a live MCP server",
       "bridge.lede__html": "<a href=\"https://github.com/MauricioPerera/llms-txt-skills\">llms-txt-skills</a> is the <strong>format</strong>; <a href=\"https://github.com/MauricioPerera/mcpwasm\">mcpwasm</a> is a <strong>runtime</strong> for it. A publisher serves hash-pinned, attested skills once, the standard way — the runtime discovers, verifies, and runs each as an MCP tool. The whole contract between them is one <code>tool_sha256</code> and its attestation.",
@@ -222,10 +223,11 @@
       "compare.oneOnly": "No (solo una)",
 
       "quickstart.h2": "Adoptalo en 3 pasos",
-      "quickstart.sub1": "1. Agregá la sección a tu llms.txt",
+      "quickstart.sub0": "La vía de un comando (CLI)",
+      "quickstart.sub1": "1. O agregá la sección a tu llms.txt a mano",
       "quickstart.sub2": "2. Escribí el SKILL.md",
       "quickstart.sub3": "3. O instalá la skill consumidora (Claude Code)",
-      "quickstart.disclaimer__html": "El generador (<code>scripts/generate.py</code>) calcula el sha256, sincroniza <code>.well-known</code>, y firma — así que nunca hace falta hacerlo a mano. Guía completa en el <a href=\"https://github.com/MauricioPerera/llms-txt-skills#readme\">README</a>.",
+      "quickstart.disclaimer__html": "El CLI (<a href=\"https://www.npmjs.com/package/@rckflr/llms-skills\"><code>@rckflr/llms-skills</code></a>) calcula el sha256, sincroniza <code>.well-known/agent-skills/index.json</code>, y firma — nada se hace a mano. En CI, una GitHub Action reutilizable (<code>uses: MauricioPerera/llms-txt-skills@master</code>) hace fallar el build si lo que servís se desvía de tus fuentes. Guía completa en el <a href=\"https://github.com/MauricioPerera/llms-txt-skills#readme\">README</a>.",
 
       "bridge.h2": "De un sitio estático a un servidor MCP vivo",
       "bridge.lede__html": "<a href=\"https://github.com/MauricioPerera/llms-txt-skills\">llms-txt-skills</a> es el <strong>formato</strong>; <a href=\"https://github.com/MauricioPerera/mcpwasm\">mcpwasm</a> es un <strong>runtime</strong> para él. Un publicador sirve una vez sus skills fijadas por hash y atestadas, de la forma estándar — el runtime las descubre, verifica y ejecuta cada una como una herramienta MCP. Todo el contrato entre ambos es un <code>tool_sha256</code> y su atestación.",
@@ -343,10 +345,11 @@
       "compare.oneOnly": "Não (só uma)",
 
       "quickstart.h2": "Adote em 3 passos",
-      "quickstart.sub1": "1. Adicione a seção ao seu llms.txt",
+      "quickstart.sub0": "O caminho de um comando (CLI)",
+      "quickstart.sub1": "1. Ou adicione a seção ao seu llms.txt manualmente",
       "quickstart.sub2": "2. Escreva o SKILL.md",
       "quickstart.sub3": "3. Ou instale a skill consumidora (Claude Code)",
-      "quickstart.disclaimer__html": "O gerador (<code>scripts/generate.py</code>) calcula o sha256, sincroniza <code>.well-known</code>, e assina — então isso nunca precisa ser feito manualmente. Guia completo no <a href=\"https://github.com/MauricioPerera/llms-txt-skills#readme\">README</a>.",
+      "quickstart.disclaimer__html": "O CLI (<a href=\"https://www.npmjs.com/package/@rckflr/llms-skills\"><code>@rckflr/llms-skills</code></a>) calcula o sha256, sincroniza <code>.well-known/agent-skills/index.json</code>, e assina — nada é feito manualmente. No CI, uma GitHub Action reutilizável (<code>uses: MauricioPerera/llms-txt-skills@master</code>) faz o build falhar se o que você serve divergir das suas fontes. Guia completo no <a href=\"https://github.com/MauricioPerera/llms-txt-skills#readme\">README</a>.",
 
       "bridge.h2": "De um site estático a um servidor MCP ativo",
       "bridge.lede__html": "<a href=\"https://github.com/MauricioPerera/llms-txt-skills\">llms-txt-skills</a> é o <strong>formato</strong>; <a href=\"https://github.com/MauricioPerera/mcpwasm\">mcpwasm</a> é um <strong>runtime</strong> para ele. Um publicador serve uma vez suas skills fixadas por hash e atestadas, da forma padrão — o runtime as descobre, verifica e executa cada uma como uma ferramenta MCP. Todo o contrato entre os dois é um <code>tool_sha256</code> e sua atestação.",
