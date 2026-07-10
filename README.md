@@ -291,6 +291,12 @@ python scripts/generate.py --check  # falla si algo quedó desincronizado (lo us
 
 Ambos toman `name`, `description`, `version` y `license` del frontmatter de cada `SKILL.md`, calculan el `sha256` (CRLF→LF) y escriben las salidas de forma determinista. El step `--check` en CI garantiza que nunca haya drift entre el `SKILL.md` y lo publicado.
 
+Para CI hay una **GitHub Action reutilizable** (definida en la raíz de este repo, auto-testeada por el propio CI): valida el `llms.txt` + skills y, si hay manifest, corre `publish --check`:
+
+```yaml
+- uses: MauricioPerera/llms-txt-skills@master
+```
+
 ### Firmar las skills (autenticidad)
 
 Si el manifest declara `signing`, el generador firma cada `SKILL.md` con ed25519 y agrega `signing_key` + `signature` al `index.json` (y escribe `signing-key.pub`). La firma es determinista (RFC 8032), así que `--check` sigue siendo idempotente.

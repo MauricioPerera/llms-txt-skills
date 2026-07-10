@@ -73,6 +73,12 @@ python scripts/generate.py          # regenerates ## Skills, .well-known copies,
 python scripts/generate.py --check  # CI guard: fails if anything is out of sync
 ```
 
+And for CI, a reusable **GitHub Action** (defined at this repo's root, self-tested by this repo's own CI) gives publishers a green check that what they serve is what agents verify:
+
+```yaml
+- uses: MauricioPerera/llms-txt-skills@master   # validate llms.txt + skills, and (if a manifest exists) publish --check
+```
+
 The generator computes `sha256`, syncs the `.well-known` artifacts, and signs each skill — eliminating the manual steps and the drift between source and published artifacts. CI runs `--check` and `verify_signatures.py` on every push.
 
 Your `llms.txt` is the **source of truth**. `index.json` and the `.well-known` copies are **derived** artifacts the generator produces and keeps in sync — you never hand-edit them, and a publisher who only needs L0–L1 discovery does not need `index.json` at all (a consumer treats it as an optional canonical/cross-check layer, not a requirement).

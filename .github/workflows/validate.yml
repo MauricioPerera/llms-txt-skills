@@ -51,3 +51,15 @@ jobs:
 
       - name: CLI publish --check (same artifacts as generate.py)
         run: node cli/bin/llms-skills.mjs publish --check --manifest scripts/skills-manifest.json --root .
+
+  # Self-test of the reusable GitHub Action (action.yml at the repo root):
+  # runs the exact composite third-party publishers consume via
+  # `uses: MauricioPerera/llms-txt-skills@master`, against this repo itself.
+  action-self-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run the validation action against this repo
+        uses: ./

@@ -1,0 +1,89 @@
+# GitHub Action: validate a publisher's llms.txt Skills.
+#
+#   - uses: MauricioPerera/llms-txt-skills@master
+#
+# Runs the @rckflr/llms-skills CLI against the repo: validates the llms.txt
+# (## Skills shape, sha256/tool_sha256 match, SKILL.md frontmatter, memory
+# line) and — when a manifest is present — checks the published artifacts
+# (## Skills section, .well-known/agent-skills/index.json, signatures) are in
+# sync with the sources (`publish --check`). Fails the build on any error, so
+# a publisher gets a green check that what they serve is what agents verify.
+#
+# This action lives in the spec repo itself and is self-tested by this repo's
+# own CI (.github/workflows/validate.yml uses `./` on every push).
+
+name: "Validate llms.txt Skills"
+description: "Validate a publisher's llms.txt ## Skills section, SKILL.md files, hashes, and published artifacts (llms-txt-skills standard)."
+author: "Mauricio Perera"
+
+branding:
+  icon: "check-circle"
+  color: "green"
+
+inputs:
+  path:
+    description: "Directory containing the llms.txt (the publisher root)."
+    required: false
+    default: "."
+  llms-txt:
+    description: "Path to the llms.txt, relative to `path`."
+    required: false
+    default: "llms.txt"
+  strict:
+    description: "Treat validation warnings as errors (true/false)."
+    required: false
+    default: "false"
+  check-sync:
+    description: "Run `publish --check` against the manifest: auto (only if a manifest exists), true (require it), or false (skip)."
+    required: false
+    default: "auto"
+  manifest:
+    description: "Manifest path relative to `path` (defaults to llms-skills.json, falling back to scripts/skills-manifest.json)."
+    required: false
+    default: ""
+  cli-version:
+    description: "@rckflr/llms-skills version to run (npm dist-tag or exact version)."
+    required: false
+    default: "latest"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+
+    - name: Validate llms.txt + skills
+      shell: bash
+      working-directory: ${{ inputs.path }}
+      run: |
+        set -e
+        STRICT=""
+        if [ "${{ inputs.strict }}" = "true" ]; then STRICT="--strict"; fi
+        npx -y "@rckflr/llms-skills@${{ inputs.cli-version }}" validate "${{ inputs['llms-txt'] }}" $STRICT
+
+    - name: Check published artifacts are in sync (publish --check)
+      shell: bash
+      working-directory: ${{ inputs.path }}
+      run: |
+        set -e
+        MODE="${{ inputs.check-sync }}"
+        if [ "$MODE" = "false" ]; then
+          echo "check-sync=false: skipping publish --check"
+          exit 0
+        fi
+        MANIFEST="${{ inputs.manifest }}"
+        if [ -z "$MANIFEST" ]; then
+          if [ -f "llms-skills.json" ]; then MANIFEST="llms-skills.json";
+          elif [ -f "scripts/skills-manifest.json" ]; then MANIFEST="scripts/skills-manifest.json";
+          fi
+        fi
+        if [ -z "$MANIFEST" ] || [ ! -f "$MANIFEST" ]; then
+          if [ "$MODE" = "true" ]; then
+            echo "check-sync=true but no manifest found (llms-skills.json / scripts/skills-manifest.json)"; exit 1
+          fi
+          echo "no manifest found: skipping publish --check (check-sync=auto)"
+          exit 0
+        fi
+        npx -y "@rckflr/llms-skills@${{ inputs.cli-version }}" publish --check --manifest "$MANIFEST" --root .
