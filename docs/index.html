@@ -205,8 +205,8 @@
   <!-- ============ TRUST MODEL ============ -->
   <section id="trust" class="section reveal">
     <div class="wrap">
-      <h2 data-i18n="trust.h2">Two rings of trust</h2>
-      <p class="section-lede" data-i18n="trust.lede">sha256 alone proves integrity, not authenticity — the same document that points to a skill also asserts its hash. Signing closes that gap.</p>
+      <h2 data-i18n="trust.h2">Three rings of trust</h2>
+      <p class="section-lede" data-i18n="trust.lede">sha256 alone proves integrity, not authenticity — the same document that points to a skill also asserts its hash. Signing closes that gap. And neither says whether the content is still true — signed freshness covers that.</p>
 
       <div class="cards cards-3">
         <article class="card">
@@ -218,6 +218,11 @@
           <div class="ring-num">02</div>
           <h3 data-i18n="trust.card2H3">Authenticity — ed25519 + key pinning</h3>
           <p data-i18n="trust.card2P__html">The publisher signs each <code>SKILL.md</code> with a key kept offline. Agents pin the key per origin (TOFU) and flag a silent change across sessions.</p>
+        </article>
+        <article class="card">
+          <div class="ring-num">03</div>
+          <h3 data-i18n="trust.card3H3">Freshness — signed “still true”</h3>
+          <p data-i18n="trust.card3P__html">Hashes freeze bytes, not truth. A registered reviewer signs a freshness attestation bound to the exact content sha — voided by any edit, expiring on a date — and <code>llms-skills freshness</code> turns stale knowledge into a failing CI build.</p>
         </article>
       </div>
     </div>
@@ -344,7 +349,9 @@
         <div class="code-head"><span>bash</span><button class="copy-btn" type="button" data-i18n="common.copy">Copy</button></div>
         <pre><code><span class="tok-kw">npx</span> @rckflr/llms-skills init mi-skill    <span class="tok-str"># scaffold SKILL.md + manifest</span>
 <span class="tok-kw">npx</span> @rckflr/llms-skills memory ./docs     <span class="tok-str"># opcional: bundle OKF → RAG sin servidor</span>
-<span class="tok-kw">npx</span> @rckflr/llms-skills publish           <span class="tok-str"># hash + ## Skills + index.json (+ firma)</span></code></pre>
+<span class="tok-kw">npx</span> @rckflr/llms-skills publish           <span class="tok-str"># hash + ## Skills + index.json (+ firma)</span>
+<span class="tok-kw">npx</span> @rckflr/llms-skills attest ./docs --concept faq.md --by human:tu --until 2027-07-10 --key tu.key
+<span class="tok-kw">npx</span> @rckflr/llms-skills freshness ./docs  <span class="tok-str"># gate CI: vence/edición sin re-atestar = build rojo</span></code></pre>
       </div>
 
       <h3 class="qs-sub" data-i18n="quickstart.sub1">1. Or add the section to your llms.txt by hand</h3>
