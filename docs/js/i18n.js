@@ -130,7 +130,7 @@
       "bridge.takeaway__html": "Neither side has to trust the other's prose: the runtime re-derives the hash and checks the signature itself. Static hosting + a verifying runtime = an MCP server with <strong>no server to run</strong>.",
 
       "ecosystem.h2": "Part of a growing spec",
-      "ecosystem.lede__html": "This RFC (v0.8) has two provisional extensions: <strong>Executable Skills</strong>, sandboxed <code>tool.js</code> a runtime executes verbatim instead of asking a model to improvise, and <strong>Skill Attestations</strong>, signed human review with an expiry window. Both are field-tested end-to-end in <a href=\"https://github.com/MauricioPerera/mcpwasm\">mcpwasm</a>, their reference implementation.",
+      "ecosystem.lede__html": "This RFC (v0.9) has two provisional extensions: <strong>Executable Skills</strong>, sandboxed <code>tool.js</code> a runtime executes verbatim instead of asking a model to improvise, and <strong>Skill Attestations</strong>, signed human review with an expiry window. Both are field-tested end-to-end in <a href=\"https://github.com/MauricioPerera/mcpwasm\">mcpwasm</a>, their reference implementation.",
 
       "footer.rfc": "Read the RFC",
       "footer.onboard": "Adoption status",
@@ -252,7 +252,7 @@
       "bridge.takeaway__html": "Ninguna de las dos partes tiene que confiar en la prosa de la otra: el runtime re-deriva el hash y verifica la firma por sí mismo. Hosting estático + un runtime que verifica = un servidor MCP <strong>sin servidor que correr</strong>.",
 
       "ecosystem.h2": "Parte de una spec en crecimiento",
-      "ecosystem.lede__html": "Este RFC (v0.8) tiene dos extensiones provisionales: <strong>Executable Skills</strong>, un <code>tool.js</code> sandboxeado que un runtime ejecuta al pie de la letra en vez de pedirle a un modelo que improvise, y <strong>Skill Attestations</strong>, revisión humana firmada con ventana de vencimiento. Ambas están probadas de punta a punta en <a href=\"https://github.com/MauricioPerera/mcpwasm\">mcpwasm</a>, su implementación de referencia.",
+      "ecosystem.lede__html": "Este RFC (v0.9) tiene dos extensiones provisionales: <strong>Executable Skills</strong>, un <code>tool.js</code> sandboxeado que un runtime ejecuta al pie de la letra en vez de pedirle a un modelo que improvise, y <strong>Skill Attestations</strong>, revisión humana firmada con ventana de vencimiento. Ambas están probadas de punta a punta en <a href=\"https://github.com/MauricioPerera/mcpwasm\">mcpwasm</a>, su implementación de referencia.",
 
       "footer.rfc": "Leer el RFC",
       "footer.onboard": "Estado de adopción",
@@ -374,7 +374,7 @@
       "bridge.takeaway__html": "Nenhum dos lados precisa confiar na prosa do outro: o runtime re-deriva o hash e verifica a assinatura por conta própria. Hospedagem estática + um runtime que verifica = um servidor MCP <strong>sem servidor para rodar</strong>.",
 
       "ecosystem.h2": "Parte de uma spec em crescimento",
-      "ecosystem.lede__html": "Este RFC (v0.8) tem duas extensões provisórias: <strong>Executable Skills</strong>, um <code>tool.js</code> isolado que um runtime executa ao pé da letra em vez de pedir a um modelo que improvise, e <strong>Skill Attestations</strong>, revisão humana assinada com janela de validade. Ambas são testadas de ponta a ponta no <a href=\"https://github.com/MauricioPerera/mcpwasm\">mcpwasm</a>, sua implementação de referência.",
+      "ecosystem.lede__html": "Este RFC (v0.9) tem duas extensões provisórias: <strong>Executable Skills</strong>, um <code>tool.js</code> isolado que um runtime executa ao pé da letra em vez de pedir a um modelo que improvise, e <strong>Skill Attestations</strong>, revisão humana assinada com janela de validade. Ambas são testadas de ponta a ponta no <a href=\"https://github.com/MauricioPerera/mcpwasm\">mcpwasm</a>, sua implementação de referência.",
 
       "footer.rfc": "Ler o RFC",
       "footer.onboard": "Status de adoção",
