@@ -88,7 +88,7 @@
       "evidence.disclaimer__html": "Small-N proof of mechanism, not a benchmark — all 3 sites are first-party. Full methodology, caveats, and raw data in <a href=\"https://github.com/MauricioPerera/llms-txt-skills/blob/master/evals/results.md\">evals/results.md</a>.",
 
       "publishers.h2": "Live publishers you can consume right now",
-      "publishers.lede__html": "Seven first-party origins dogfood the full stack — <code>## Skills</code>, hash-pinned BM25 knowledge, executable tools, SKILL.md recipes, signed index. The root origin is directly consumable (<code>npx -y @rckflr/mcpwasm https://mauricioperera.github.io</code>); project pages are consumed via clone + <code>--serve</code> (RFC v0.9 OQ6).",
+      "publishers.lede__html": "Seven first-party origins dogfood the full stack — <code>## Skills</code>, hash-pinned BM25 knowledge, executable tools, SKILL.md recipes, signed index. The root origin is directly consumable (<code>npx -y @rckflr/mcpwasm https://mauricioperera.github.io</code>); project pages are consumed via clone + <code>--serve</code> (resolved: Executable Skills v0.5 §2.5).",
       "publishers.root": "root origin: site_facts + the standard's own skills, live-consumable",
       "publishers.own": "this spec: 4 skills incl. a custom validator + 6-concept knowledge bundle",
       "publishers.kdd": "a real pre-existing OKF bundle, 40 concepts",
@@ -137,7 +137,7 @@
       "bridge.takeaway__html": "Neither side has to trust the other's prose: the runtime re-derives the hash and checks the signature itself. Static hosting + a verifying runtime = an MCP server with <strong>no server to run</strong>.",
 
       "ecosystem.h2": "Part of a growing spec",
-      "ecosystem.lede__html": "This RFC (v0.9) has two provisional extensions: <strong>Executable Skills</strong>, sandboxed <code>tool.js</code> a runtime executes verbatim instead of asking a model to improvise, and <strong>Skill Attestations</strong>, signed human review with an expiry window. Both are field-tested end-to-end in <a href=\"https://github.com/MauricioPerera/mcpwasm\">mcpwasm</a>, their reference implementation.",
+      "ecosystem.lede__html": "This RFC (v0.10) has two provisional extensions: <strong>Executable Skills</strong>, sandboxed <code>tool.js</code> a runtime executes verbatim instead of asking a model to improvise, and <strong>Skill Attestations</strong>, signed human review with an expiry window. Both are field-tested end-to-end in <a href=\"https://github.com/MauricioPerera/mcpwasm\">mcpwasm</a>, their reference implementation.",
 
       "footer.rfc": "Read the RFC",
       "footer.onboard": "Adoption status",
@@ -217,7 +217,7 @@
       "evidence.disclaimer__html": "Prueba de mecanismo con n chico, no un benchmark — los 3 sitios son del mismo autor. Metodología completa, salvedades, y datos crudos en <a href=\"https://github.com/MauricioPerera/llms-txt-skills/blob/master/evals/results.md\">evals/results.md</a>.",
 
       "publishers.h2": "Publicadores vivos que podés consumir ya",
-      "publishers.lede__html": "Siete origins first-party dogfoodean el stack completo — <code>## Skills</code>, conocimiento BM25 fijado por hash, tools ejecutables, recetas SKILL.md, índice firmado. El origin raíz es consumible directo (<code>npx -y @rckflr/mcpwasm https://mauricioperera.github.io</code>); las project pages se consumen con clone + <code>--serve</code> (RFC v0.9 OQ6).",
+      "publishers.lede__html": "Siete origins first-party dogfoodean el stack completo — <code>## Skills</code>, conocimiento BM25 fijado por hash, tools ejecutables, recetas SKILL.md, índice firmado. El origin raíz es consumible directo (<code>npx -y @rckflr/mcpwasm https://mauricioperera.github.io</code>); las project pages se consumen con clone + <code>--serve</code> (resolved: Executable Skills v0.5 §2.5).",
       "publishers.root": "origin raíz: site_facts + las skills del propio estándar, consumible en vivo",
       "publishers.own": "esta spec: 4 skills (incl. un validador custom) + bundle de conocimiento de 6 conceptos",
       "publishers.kdd": "un bundle OKF real preexistente, 40 conceptos",
@@ -266,7 +266,7 @@
       "bridge.takeaway__html": "Ninguna de las dos partes tiene que confiar en la prosa de la otra: el runtime re-deriva el hash y verifica la firma por sí mismo. Hosting estático + un runtime que verifica = un servidor MCP <strong>sin servidor que correr</strong>.",
 
       "ecosystem.h2": "Parte de una spec en crecimiento",
-      "ecosystem.lede__html": "Este RFC (v0.9) tiene dos extensiones provisionales: <strong>Executable Skills</strong>, un <code>tool.js</code> sandboxeado que un runtime ejecuta al pie de la letra en vez de pedirle a un modelo que improvise, y <strong>Skill Attestations</strong>, revisión humana firmada con ventana de vencimiento. Ambas están probadas de punta a punta en <a href=\"https://github.com/MauricioPerera/mcpwasm\">mcpwasm</a>, su implementación de referencia.",
+      "ecosystem.lede__html": "Este RFC (v0.10) tiene dos extensiones provisionales: <strong>Executable Skills</strong>, un <code>tool.js</code> sandboxeado que un runtime ejecuta al pie de la letra en vez de pedirle a un modelo que improvise, y <strong>Skill Attestations</strong>, revisión humana firmada con ventana de vencimiento. Ambas están probadas de punta a punta en <a href=\"https://github.com/MauricioPerera/mcpwasm\">mcpwasm</a>, su implementación de referencia.",
 
       "footer.rfc": "Leer el RFC",
       "footer.onboard": "Estado de adopción",
@@ -346,7 +346,7 @@
       "evidence.disclaimer__html": "Prova de mecanismo com n pequeno, não um benchmark — os 3 sites são do mesmo autor. Metodologia completa, ressalvas e dados brutos em <a href=\"https://github.com/MauricioPerera/llms-txt-skills/blob/master/evals/results.md\">evals/results.md</a>.",
 
       "publishers.h2": "Publicadores ao vivo que você pode consumir agora",
-      "publishers.lede__html": "Sete origins first-party fazem dogfood do stack completo — <code>## Skills</code>, conhecimento BM25 fixado por hash, tools executáveis, receitas SKILL.md, índice assinado. A origin raiz é consumível direto (<code>npx -y @rckflr/mcpwasm https://mauricioperera.github.io</code>); as project pages são consumidas com clone + <code>--serve</code> (RFC v0.9 OQ6).",
+      "publishers.lede__html": "Sete origins first-party fazem dogfood do stack completo — <code>## Skills</code>, conhecimento BM25 fixado por hash, tools executáveis, receitas SKILL.md, índice assinado. A origin raiz é consumível direto (<code>npx -y @rckflr/mcpwasm https://mauricioperera.github.io</code>); as project pages são consumidas com clone + <code>--serve</code> (resolved: Executable Skills v0.5 §2.5).",
       "publishers.root": "origin raiz: site_facts + as skills do próprio padrão, consumível ao vivo",
       "publishers.own": "esta spec: 4 skills (incl. um validador custom) + bundle de conhecimento de 6 conceitos",
       "publishers.kdd": "um bundle OKF real preexistente, 40 conceitos",
@@ -395,7 +395,7 @@
       "bridge.takeaway__html": "Nenhum dos lados precisa confiar na prosa do outro: o runtime re-deriva o hash e verifica a assinatura por conta própria. Hospedagem estática + um runtime que verifica = um servidor MCP <strong>sem servidor para rodar</strong>.",
 
       "ecosystem.h2": "Parte de uma spec em crescimento",
-      "ecosystem.lede__html": "Este RFC (v0.9) tem duas extensões provisórias: <strong>Executable Skills</strong>, um <code>tool.js</code> isolado que um runtime executa ao pé da letra em vez de pedir a um modelo que improvise, e <strong>Skill Attestations</strong>, revisão humana assinada com janela de validade. Ambas são testadas de ponta a ponta no <a href=\"https://github.com/MauricioPerera/mcpwasm\">mcpwasm</a>, sua implementação de referência.",
+      "ecosystem.lede__html": "Este RFC (v0.10) tem duas extensões provisórias: <strong>Executable Skills</strong>, um <code>tool.js</code> isolado que um runtime executa ao pé da letra em vez de pedir a um modelo que improvise, e <strong>Skill Attestations</strong>, revisão humana assinada com janela de validade. Ambas são testadas de ponta a ponta no <a href=\"https://github.com/MauricioPerera/mcpwasm\">mcpwasm</a>, sua implementação de referência.",
 
       "footer.rfc": "Ler o RFC",
       "footer.onboard": "Status de adoção",
