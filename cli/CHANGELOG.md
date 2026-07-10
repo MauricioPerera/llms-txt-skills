@@ -4,6 +4,40 @@ All notable changes to the [`@rckflr/llms-skills`](https://www.npmjs.com/package
 package. Format based on [Keep a Changelog](https://keepachangelog.com/); dates
 are the npm publish dates.
 
+## [Unreleased] — 0.4.0
+
+### Added
+- **Signed knowledge freshness — the RAG-OKF v2 "vigencia" layer.** Two new
+  commands over a knowledge bundle, porting the proven
+  `ccdd/examples/okf-integration` sidecar and staying **wire-compatible**
+  with its Python tooling (same signed message
+  `vigencia:{concept}:{content_sha256}:{attested_at}:{valid_until}`, same
+  raw-hex ed25519 keys/signatures, same `freshness.yaml` /
+  `attestations.json` / `reviewers.json` files — attestations sign/verify
+  across both toolchains, covered by a verbatim fixture signed with the
+  Python reference):
+  - **`freshness <bundle> [--now ISO] [--json]`** — CI-friendly report of
+    three honestly-separated signals: content hashes say *not tampered*
+    (publish), age vs per-`type` TTLs says *recent* (a proxy — age ≠ truth),
+    and a signed human attestation says *still true*. Statuses: `fresh` /
+    `STALE` / `MISSING-TS` / `untracked` / `VIGENT` / `VOID-ATTEST` /
+    `EXPIRED-ATTEST` / `INVALID-ATTEST`. `on_stale: abort` turns stale
+    knowledge into a failing exit code.
+  - **`attest <bundle> --concept <rel.md> --by <reviewer> --until <ISO>
+    --key <hex-file>`** — a registered human signs "this content is still
+    true". The signature binds to the exact content sha (any edit voids it)
+    and expires at `--until` (re-affirmable without touching content); the
+    signing key must match the reviewer's registered pubkey. The machine
+    binds, verifies and expires; the human judges.
+- Note: `content_sha256` is over **raw** file bytes (Python-reference
+  compatibility, no CRLF normalization) — pin your bundle's markdown
+  (`*.md text eol=lf` or `-text`) so git line-ending conversion cannot void
+  attestations.
+- Hybrid embeddings (the other half of the v2 design) remain **not built**,
+  blocked upstream: `@rckflr/minimemory`'s OKF index is BM25-only by design,
+  there is no embedder in the stack, and float embeddings clash with
+  byte-exact content addressing.
+
 ## [0.3.0] — 2026-07-10
 
 ### Added

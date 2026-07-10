@@ -89,6 +89,35 @@ verifies the snapshot and injects `host.memorySearch` on both runtimes.
 default; if omitted, `memory` fails with a clear message and every other
 command works as before.
 
+## Knowledge freshness (`freshness` / `attest`)
+
+Hashes prove *not tampered*; they say nothing about whether the content is
+still **true**. The freshness layer separates three signals honestly:
+
+```bash
+npx @rckflr/llms-skills freshness ./knowledge --now 2026-07-10   # CI report
+npx @rckflr/llms-skills attest ./knowledge --concept policies/refunds.md \
+    --by human:mauricio --until 2027-07-10 --key mauricio.key    # sign "still true"
+```
+
+- **Age vs TTL** (`knowledge/freshness.yaml`): per-`type` TTL in days +
+  per-path overrides. A concept past its TTL reports `STALE`; `on_stale:
+  abort` makes the command exit 1 (CI gate). Age is a *proxy* — old-but-true
+  passes as stale, new-but-false passes as fresh. Which is why:
+- **Signed attestations** (`knowledge/attestations.json`): a reviewer
+  registered in `knowledge/reviewers.json` (raw-hex ed25519 pubkey) signs
+  "this content is still true". The signature binds to the exact content
+  sha — **any edit voids it** — and expires at `valid_until`, re-affirmable
+  without touching the content. A valid attestation supersedes age
+  (`VIGENT`); tampering, expiry or an unregistered reviewer degrade it
+  loudly (`VOID-ATTEST` / `EXPIRED-ATTEST` / `INVALID-ATTEST`).
+
+Wire-compatible with the original Python sidecar
+(`ccdd/examples/okf-integration`): attestations sign/verify across both
+toolchains. Note: the content sha is over raw bytes — pin your bundle's
+markdown (`*.md text eol=lf`) so git CRLF conversion cannot void
+attestations.
+
 ## Signing / attestation (L3)
 
 ```bash

@@ -261,5 +261,96 @@ console.log("\nPart 6: scopes (Executable Skills v0.5 §2.5) — --scope wiring 
   }
 }
 
+console.log("\nPart 7: freshness — signed knowledge freshness (RAG-OKF v2)");
+{
+  const { checkFreshness, attestVigencia, sha256RawFile } = await import("./lib/freshness.mjs");
+  const { generateKeyPairSync, createPublicKey } = await import("node:crypto");
+
+  // Raw-hex ed25519 identity, wire-compatible with the Python reference:
+  // private = 32-byte seed hex, public = raw 32-byte hex.
+  const kp = generateKeyPairSync("ed25519");
+  const pkcs8 = kp.privateKey.export({ type: "pkcs8", format: "der" });
+  const privHex = Buffer.from(pkcs8.subarray(pkcs8.length - 32)).toString("hex");
+  const spki = createPublicKey(kp.privateKey).export({ type: "spki", format: "der" });
+  const pubHex = Buffer.from(spki.subarray(spki.length - 32)).toString("hex");
+
+  const dir = join(tmpdir(), "llms-fresh-" + Date.now());
+  try {
+    mkdirSync(join(dir, "policies"), { recursive: true });
+    writeFileSync(join(dir, "policies", "refunds.md"),
+      "---\ntype: Policy\ntitle: Refunds\ntimestamp: 2020-01-01\n---\n\nOld but attested policy.\n", "utf8");
+    writeFileSync(join(dir, "guide.md"),
+      "---\ntype: Documentation\ntitle: Guide\ntimestamp: 2026-07-01\n---\n\nFresh doc.\n", "utf8");
+    writeFileSync(join(dir, "untimed.md"),
+      "---\ntype: Policy\ntitle: No timestamp\n---\n\nPolicy without timestamp.\n", "utf8");
+    writeFileSync(join(dir, "freshness.yaml"),
+      "freshness_version: \"0.1\"\ndefaults:\n  Policy: 365\n  Documentation: 180\non_stale: warn\nrequire_timestamp_for_types: [Policy]\n", "utf8");
+    writeFileSync(join(dir, "reviewers.json"), JSON.stringify({ "human:test": pubHex }, null, 2) + "\n", "utf8");
+    writeFileSync(join(dir, "key.hex"), privHex + "\n", "utf8");
+
+    const byStatus = (res) => Object.fromEntries(res.concepts.map((r) => [r.concept, r.status]));
+
+    check("freshness: TTL proxy — old policy STALE, fresh doc fresh, missing required ts flagged", () => {
+      const res = checkFreshness(dir, "2026-07-10");
+      const st = byStatus(res);
+      eq(st["policies/refunds.md"], "STALE", "old policy must be STALE by age");
+      eq(st["guide.md"], "fresh", "recent doc must be fresh");
+      eq(st["untimed.md"], "MISSING-TS", "Policy without timestamp must be MISSING-TS");
+      ok(res.stale === 1 && res.missing_required_ts === 1 && res.fail === false, "warn mode must not fail");
+    });
+    check("attest: signed attestation supersedes age (STALE -> VIGENT)", () => {
+      attestVigencia({ bundleDir: dir, concept: "policies/refunds.md", by: "human:test",
+        on: "2026-07-10", until: "2027-07-10", keyPath: join(dir, "key.hex"), note: "reviewed" });
+      const st = byStatus(checkFreshness(dir, "2026-07-10"));
+      eq(st["policies/refunds.md"], "VIGENT", "attested concept must be VIGENT");
+    });
+    check("freshness: attestation is voided by content edit (VOID-ATTEST)", () => {
+      const p = join(dir, "policies", "refunds.md");
+      writeFileSync(p, readFileSync(p, "utf8") + "\nEdited after attestation.\n", "utf8");
+      const st = byStatus(checkFreshness(dir, "2026-07-10"));
+      eq(st["policies/refunds.md"], "VOID-ATTEST", "edited content must void the attestation");
+    });
+    check("freshness: attestation expires at valid_until (EXPIRED-ATTEST)", () => {
+      attestVigencia({ bundleDir: dir, concept: "policies/refunds.md", by: "human:test",
+        on: "2026-07-10", until: "2026-08-01", keyPath: join(dir, "key.hex") });
+      const st = byStatus(checkFreshness(dir, "2026-09-01"));
+      eq(st["policies/refunds.md"], "EXPIRED-ATTEST", "past valid_until must be EXPIRED-ATTEST");
+    });
+    check("freshness: unregistered reviewer -> INVALID-ATTEST; abort mode -> fail", () => {
+      writeFileSync(join(dir, "reviewers.json"), "{}\n", "utf8");
+      const res = checkFreshness(dir, "2026-07-10");
+      eq(byStatus(res)["policies/refunds.md"], "INVALID-ATTEST", "unregistered reviewer must invalidate");
+      writeFileSync(join(dir, "freshness.yaml"),
+        "defaults:\n  Policy: 365\n  Documentation: 180\non_stale: abort\nrequire_timestamp_for_types: [Policy]\n", "utf8");
+      ok(checkFreshness(dir, "2026-07-10").fail === true, "abort mode with stale must fail");
+    });
+    check("attest: refuses a key that does not match the registered reviewer pubkey", () => {
+      writeFileSync(join(dir, "reviewers.json"), JSON.stringify({ "human:test": "0".repeat(64) }) + "\n", "utf8");
+      let threw = false;
+      try {
+        attestVigencia({ bundleDir: dir, concept: "guide.md", by: "human:test",
+          on: "2026-07-10", until: "2027-07-10", keyPath: join(dir, "key.hex") });
+      } catch { threw = true; }
+      ok(threw, "mismatched key/pubkey must be rejected");
+    });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+
+  // Wire-format interop: the fixture attestation was signed by the PYTHON
+  // reference tooling (ccdd/examples/okf-integration attest_vigencia.py).
+  // The Node CLI must honor it verbatim — same message, same hex ed25519.
+  check("freshness: verifies a REAL attestation signed by the Python reference tooling", () => {
+    const fx = join(HERE, "fixtures", "okf-vigencia");
+    const res = checkFreshness(fx, "2026-07-10");
+    const row = res.concepts.find((r) => r.concept === "policies/refunds.md");
+    ok(row && row.status === "VIGENT" && row.by === "human:mauricio",
+      "Python-signed attestation must verify as VIGENT, got " + JSON.stringify(row));
+    // and the binding really is to the raw bytes:
+    eq(sha256RawFile(join(fx, "policies", "refunds.md")),
+      "dbb1af85d080e5e27587e5c64dcd0b94b2bd90acf9ff6cad4a705e43a0d7c6f1", "fixture bytes drifted");
+  });
+}
+
 console.log(failures === 0 ? "\nCLI TEST: OK" : `\nCLI TEST: ${failures} failure(s)`);
 process.exit(failures === 0 ? 0 : 1);

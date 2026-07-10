@@ -11,12 +11,13 @@
 // Zero external dependencies.
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
-import { join, dirname, relative } from "node:path";
+import { join, dirname, relative, isAbsolute } from "node:path";
 import {
   loadSkills, loadMemory, renderSkillsSection, renderSkillsMemoryLine, renderLlmsTxt,
   renderIndex, loadSigningKey, signSkills, publicKeyRawB64, generateKeyPair, validateLlmsTxt,
 } from "../lib/core.mjs";
 import { buildMemoryTargets } from "../lib/memory.mjs";
+import { checkFreshness, attestVigencia } from "../lib/freshness.mjs";
 
 const args = process.argv.slice(2);
 const cmd = args[0];
@@ -33,6 +34,13 @@ Usage:
                                                     OKF bundle -> BM25 snapshot + knowledge skills (RAG)
   llms-skills publish [--check] [--manifest <p>] [--root <dir>]   generate llms.txt ## Skills + index.json
   llms-skills validate <src> [--strict]             validate an llms.txt (path or URL)
+  llms-skills freshness <bundle-dir> [--now <ISO>] [--json] [--root <dir>]
+                                                    check knowledge freshness: TTLs (freshness.yaml)
+                                                    + signed human attestations (attestations.json)
+  llms-skills attest <bundle-dir> --concept <rel.md> --by <reviewer> --until <ISO>
+                     --key <privkey-hex-file> [--on <ISO>] [--note <text>] [--root <dir>]
+                                                    sign "this content is still true" (ed25519,
+                                                    voided on edit, expires at --until)
   llms-skills keygen [--out <keyfile>]              generate an ed25519 signing keypair
 
 The minimal case (L0) needs no signing key and no tool.js — just init + publish.
@@ -237,6 +245,47 @@ function cmdKeygen() {
 }
 
 // ---- dispatch ----
+// ---- freshness (RAG-OKF v2: signed knowledge freshness) ----
+function resolveBundle(cmdName) {
+  const bundleArg = args[1];
+  if (!bundleArg || bundleArg.startsWith("--")) die(`${cmdName}: needs a bundle directory, e.g. \`llms-skills ${cmdName} ./knowledge\``);
+  const root = flag("--root") || process.cwd();
+  const bundleDir = isAbsolute(bundleArg) ? bundleArg : join(root, bundleArg);
+  if (!existsSync(bundleDir)) die(`${cmdName}: bundle directory not found: ${bundleDir}`);
+  return bundleDir;
+}
+
+function cmdFreshness() {
+  const bundleDir = resolveBundle("freshness");
+  const now = flag("--now") || new Date().toISOString().slice(0, 10);
+  const result = checkFreshness(bundleDir, now, (w) => console.error(`[warn] ${w}`));
+  if (has("--json")) {
+    console.log(JSON.stringify(result, null, 2));
+  } else {
+    console.log(`FRESHNESS @ ${result.now}  (on_stale=${result.on_stale})`);
+    for (const r of result.concepts) {
+      const age = r.age_days === null || r.age_days === undefined ? "-" : `${r.age_days}d`;
+      const ttl = r.ttl_days === null || r.ttl_days === undefined ? "-" : `${r.ttl_days}d`;
+      const rem = r.remaining_days !== undefined && r.status === "fresh" ? `  (${r.remaining_days}d left)` : "";
+      const extra = r.detail ? `  [${r.by || "-"}] ${r.detail}` : "";
+      console.log(`  [${String(r.status).padStart(14)}] ${r.concept.padEnd(32)} age=${age.padEnd(5)} ttl=${ttl}${rem}${extra}`);
+    }
+    console.log(`  stale=${result.stale}  missing_required_ts=${result.missing_required_ts}`);
+  }
+  if (result.fail) process.exit(1);
+}
+
+// ---- attest (sign one freshness attestation) ----
+function cmdAttest() {
+  const bundleDir = resolveBundle("attest");
+  const concept = flag("--concept"); const by = flag("--by");
+  const until = flag("--until"); const keyPath = flag("--key");
+  if (!concept || !by || !until || !keyPath) die("attest: --concept, --by, --until and --key are required");
+  const on = flag("--on") || new Date().toISOString().slice(0, 10);
+  const entry = attestVigencia({ bundleDir, concept, by, on, until, keyPath, note: flag("--note") || "" });
+  console.log(`ATTESTED+SIGNED: ${concept} fresh per ${by} until ${until} (sha ${entry.content_sha256.slice(0, 8)}..., sig ${entry.signature.slice(0, 8)}...)`);
+}
+
 (async () => {
   try {
     switch (cmd) {
@@ -244,6 +293,8 @@ function cmdKeygen() {
       case "memory": await cmdMemory(); break;
       case "publish": cmdPublish(); break;
       case "validate": await cmdValidate(); break;
+      case "freshness": cmdFreshness(); break;
+      case "attest": cmdAttest(); break;
       case "keygen": cmdKeygen(); break;
       case "-h": case "--help": case "help": case undefined: console.log(USAGE); break;
       default: die(`Unknown command: ${cmd}\n\n${USAGE}`);
