@@ -88,10 +88,10 @@
       "evidence.disclaimer__html": "Small-N proof of mechanism, not a benchmark — all 3 sites are first-party. Full methodology, caveats, and raw data in <a href=\"https://github.com/MauricioPerera/llms-txt-skills/blob/master/evals/results.md\">evals/results.md</a>.",
 
       "publishers.h2": "Live publishers you can consume right now",
-      "publishers.lede__html": "Seven first-party origins dogfood the full stack — <code>## Skills</code>, hash-pinned BM25 knowledge, executable tools, SKILL.md recipes, signed index. The root origin is directly consumable (<code>npx -y @rckflr/mcpwasm https://mauricioperera.github.io</code>); project pages are consumed via clone + <code>--serve</code> (resolved: Executable Skills v0.5 §2.5).",
-      "publishers.root": "root origin: site_facts + the standard's own skills, live-consumable",
+      "publishers.lede__html": "Seven first-party origins dogfood the full stack — <code>## Skills</code>, hash-pinned BM25 knowledge, executable tools, SKILL.md recipes, signed index. The root origin is directly consumable (<code>npx -y @rckflr/mcpwasm https://mauricioperera.github.io</code>) and now aggregates a second project on the same <code>llms.txt</code>: KDD under the <code>kdd</code> scope — <code>kdd__search_knowledge</code>, with its own verified memory (scopes, Executable Skills v0.5 §2.5; live in mcpwasm 0.6.0, <code>llms-skills memory --scope</code> in 0.3.0). Other project pages are consumed via clone + <code>--serve</code>.",
+      "publishers.root__html": "root origin: site_facts + the standard's own skills + KDD aggregated under the <code>kdd</code> scope, live-consumable",
       "publishers.own": "this spec: 4 skills incl. a custom validator + 6-concept knowledge bundle",
-      "publishers.kdd": "a real pre-existing OKF bundle, 40 concepts",
+      "publishers.kdd__html": "a real pre-existing OKF bundle, 40 concepts — also served from the root as <code>kdd__*</code>",
       "publishers.family": "the KDD methodology family, each publishing its own specs as searchable skills",
 
       "compare.h2": "Where this fits",
@@ -217,10 +217,10 @@
       "evidence.disclaimer__html": "Prueba de mecanismo con n chico, no un benchmark — los 3 sitios son del mismo autor. Metodología completa, salvedades, y datos crudos en <a href=\"https://github.com/MauricioPerera/llms-txt-skills/blob/master/evals/results.md\">evals/results.md</a>.",
 
       "publishers.h2": "Publicadores vivos que podés consumir ya",
-      "publishers.lede__html": "Siete origins first-party dogfoodean el stack completo — <code>## Skills</code>, conocimiento BM25 fijado por hash, tools ejecutables, recetas SKILL.md, índice firmado. El origin raíz es consumible directo (<code>npx -y @rckflr/mcpwasm https://mauricioperera.github.io</code>); las project pages se consumen con clone + <code>--serve</code> (resolved: Executable Skills v0.5 §2.5).",
-      "publishers.root": "origin raíz: site_facts + las skills del propio estándar, consumible en vivo",
+      "publishers.lede__html": "Siete origins first-party dogfoodean el stack completo — <code>## Skills</code>, conocimiento BM25 fijado por hash, tools ejecutables, recetas SKILL.md, índice firmado. El origin raíz es consumible directo (<code>npx -y @rckflr/mcpwasm https://mauricioperera.github.io</code>) y ahora agrega un segundo proyecto en el mismo <code>llms.txt</code>: KDD bajo el scope <code>kdd</code> — <code>kdd__search_knowledge</code>, con su propia memoria verificada (scopes, Executable Skills v0.5 §2.5; en producción en mcpwasm 0.6.0, <code>llms-skills memory --scope</code> en 0.3.0). Las demás project pages se consumen con clone + <code>--serve</code>.",
+      "publishers.root__html": "origin raíz: site_facts + las skills del propio estándar + KDD agregado bajo el scope <code>kdd</code>, consumible en vivo",
       "publishers.own": "esta spec: 4 skills (incl. un validador custom) + bundle de conocimiento de 6 conceptos",
-      "publishers.kdd": "un bundle OKF real preexistente, 40 conceptos",
+      "publishers.kdd__html": "un bundle OKF real preexistente, 40 conceptos — también servido desde la raíz como <code>kdd__*</code>",
       "publishers.family": "la familia de metodologías KDD, cada una publicando sus propias specs como skills buscables",
 
       "compare.h2": "Dónde encaja esto",
@@ -346,10 +346,10 @@
       "evidence.disclaimer__html": "Prova de mecanismo com n pequeno, não um benchmark — os 3 sites são do mesmo autor. Metodologia completa, ressalvas e dados brutos em <a href=\"https://github.com/MauricioPerera/llms-txt-skills/blob/master/evals/results.md\">evals/results.md</a>.",
 
       "publishers.h2": "Publicadores ao vivo que você pode consumir agora",
-      "publishers.lede__html": "Sete origins first-party fazem dogfood do stack completo — <code>## Skills</code>, conhecimento BM25 fixado por hash, tools executáveis, receitas SKILL.md, índice assinado. A origin raiz é consumível direto (<code>npx -y @rckflr/mcpwasm https://mauricioperera.github.io</code>); as project pages são consumidas com clone + <code>--serve</code> (resolved: Executable Skills v0.5 §2.5).",
-      "publishers.root": "origin raiz: site_facts + as skills do próprio padrão, consumível ao vivo",
+      "publishers.lede__html": "Sete origins first-party fazem dogfood do stack completo — <code>## Skills</code>, conhecimento BM25 fixado por hash, tools executáveis, receitas SKILL.md, índice assinado. A origin raiz é consumível direto (<code>npx -y @rckflr/mcpwasm https://mauricioperera.github.io</code>) e agora agrega um segundo projeto no mesmo <code>llms.txt</code>: KDD sob o scope <code>kdd</code> — <code>kdd__search_knowledge</code>, com sua própria memória verificada (scopes, Executable Skills v0.5 §2.5; em produção no mcpwasm 0.6.0, <code>llms-skills memory --scope</code> na 0.3.0). As demais project pages são consumidas com clone + <code>--serve</code>.",
+      "publishers.root__html": "origin raiz: site_facts + as skills do próprio padrão + KDD agregado sob o scope <code>kdd</code>, consumível ao vivo",
       "publishers.own": "esta spec: 4 skills (incl. um validador custom) + bundle de conhecimento de 6 conceitos",
-      "publishers.kdd": "um bundle OKF real preexistente, 40 conceitos",
+      "publishers.kdd__html": "um bundle OKF real preexistente, 40 conceitos — também servido a partir da raiz como <code>kdd__*</code>",
       "publishers.family": "a família de metodologias KDD, cada uma publicando suas próprias specs como skills pesquisáveis",
 
       "compare.h2": "Onde isso se encaixa",
