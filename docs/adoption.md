@@ -58,7 +58,15 @@ All three are published by the project author (first-party demos — **not** thi
 
 ## Publishing without manual work
 
-Publishers declare their skills in [`scripts/skills-manifest.json`](../scripts/skills-manifest.json) and run the generator:
+The one-command way — **no clone, no Python** — is the [`@rckflr/llms-skills`](../cli/README.md) CLI:
+
+```bash
+npx @rckflr/llms-skills init my-skill   # scaffold SKILL.md (+ tool.js with --tool) + manifest
+npx @rckflr/llms-skills publish          # write ## Skills into llms.txt + index.json (+ sign)
+npx @rckflr/llms-skills publish --check   # CI guard: fails on drift
+```
+
+Inside this repo, the reference Python generator does the identical thing (byte-identical output, enforced by `cli/test.mjs`) from [`scripts/skills-manifest.json`](../scripts/skills-manifest.json):
 
 ```bash
 python scripts/generate.py          # regenerates ## Skills, .well-known copies, index.json, and signs

@@ -39,3 +39,15 @@ jobs:
       - name: Verify skill signatures
         run: |
           python scripts/verify_signatures.py
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: CLI byte-identity + round-trip tests
+        working-directory: cli
+        run: node test.mjs
+
+      - name: CLI publish --check (same artifacts as generate.py)
+        run: node cli/bin/llms-skills.mjs publish --check --manifest scripts/skills-manifest.json --root .

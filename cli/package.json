@@ -1,0 +1,38 @@
+{
+  "name": "@rckflr/llms-skills",
+  "version": "0.1.0",
+  "description": "One-command publisher CLI for the llms.txt Skills standard: scaffold, hash, sign, and sync the ## Skills section + .well-known/agent-skills/index.json. Byte-identical to the reference Python generator; zero dependencies.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Mauricio Perera <mauricio.perera@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MauricioPerera/llms-txt-skills.git",
+    "directory": "cli"
+  },
+  "homepage": "https://mauricioperera.github.io/llms-txt-skills/",
+  "bugs": {
+    "url": "https://github.com/MauricioPerera/llms-txt-skills/issues"
+  },
+  "keywords": ["llms.txt", "agent-skills", "skills", "mcp", "publisher", "cli", "ed25519", "sha256"],
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "llms-skills": "bin/llms-skills.mjs"
+  },
+  "exports": {
+    ".": "./lib/core.mjs"
+  },
+  "files": [
+    "bin/llms-skills.mjs",
+    "lib/core.mjs",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "node test.mjs"
+  }
+}

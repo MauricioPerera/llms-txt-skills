@@ -274,14 +274,22 @@ Sube ambos archivos a cualquier host estático. No necesitas servidor, proceso p
 
 ### Mantener todo sincronizado (recomendado)
 
-En vez de editar a mano la sección `## Skills`, calcular el `sha256` y copiar el `.well-known`, declará qué skills publica el dominio en `scripts/skills-manifest.json` y dejá que el generador haga el resto:
+En vez de editar a mano la sección `## Skills`, calcular el `sha256` y copiar el `.well-known`, dejá que la herramienta haga el resto. **Sin clonar nada ni tener Python**, con el CLI ([`@rckflr/llms-skills`](cli/README.md)):
+
+```bash
+npx @rckflr/llms-skills init mi-skill    # scaffold del SKILL.md (+ tool.js con --tool) y del manifest
+npx @rckflr/llms-skills publish          # escribe ## Skills en llms.txt + index.json (+ firma si hay clave)
+npx @rckflr/llms-skills publish --check   # falla si hay drift (para CI)
+```
+
+Dentro de este repo, el generador Python de referencia hace **exactamente lo mismo** (salida byte-idéntica, verificada por `cli/test.mjs`):
 
 ```bash
 python scripts/generate.py          # regenera ## Skills, .well-known/skills/default y .well-known/agent-skills/index.json
 python scripts/generate.py --check  # falla si algo quedó desincronizado (lo usa CI)
 ```
 
-El generador toma `name`, `description`, `version` y `license` del frontmatter de cada `SKILL.md`, calcula el `sha256` (CRLF→LF) y escribe las salidas de forma determinista. El step `--check` en CI garantiza que nunca haya drift entre el `SKILL.md` y lo publicado.
+Ambos toman `name`, `description`, `version` y `license` del frontmatter de cada `SKILL.md`, calculan el `sha256` (CRLF→LF) y escriben las salidas de forma determinista. El step `--check` en CI garantiza que nunca haya drift entre el `SKILL.md` y lo publicado.
 
 ### Firmar las skills (autenticidad)
 
