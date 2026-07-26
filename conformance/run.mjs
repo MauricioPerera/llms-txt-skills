@@ -22,7 +22,13 @@ import { createHash } from "node:crypto";
 import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 
-const sha = (s) => createHash("sha256").update(s.replace(/\r\n/g, "\n"), "utf8").digest("hex");
+// sha256 de los bytes EXACTOS, sin normalizar nada. Antes normalizaba CRLF->LF
+// antes de digerir. Hoy eso es inocuo, porque las fixtures son literales de
+// plantilla y JavaScript ya normaliza sus terminadores de linea al parsear — pero
+// codificaba la interpretacion equivocada del requisito 1 justo en la herramienta
+// con la que un tercero demuestra conformancia, y rompe en cuanto una fixture
+// sirva CRLF a proposito, como la de C15.
+const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
 
 // ---------------------------------------------------------------------------
 // Fixture publisher: cada archivo esta pensado para ejercitar un MUST.
@@ -68,6 +74,24 @@ const SKILL_MD_BAD = "---\nname: c_origin\n---\n\n# tampered\n";
 // hash declarado NO coincide.
 const FAKE_SNAPSHOT = '{"not":"a real snapshot"}';
 
+// Fixture de C15: bytes servidos con CRLF y hash declarado sobre ESOS bytes.
+// Se construye con join() a proposito — un literal de plantilla no sirve, porque
+// JavaScript normaliza sus terminadores de linea al parsear.
+//
+// Un runtime que normalice antes de hashear calculara el hash de la version LF,
+// no coincidira con lo declarado y rechazara la skill: eso es NO conformancia con
+// el requisito 1 ("over the exact received bytes"), y hasta ahora ningun check lo
+// detectaba. Caso real: tres implementaciones del mismo estandar discrepaban sobre
+// que bytes cubre tool_sha256, y la que normalizaba pasaba este kit entero.
+const T_CRLF = [
+  'registerTool({',
+  '  name: "c_crlf",',
+  '  description: "Served with CRLF line endings.",',
+  '  inputSchema: { type: "object" },',
+  '  handler() { return "crlf-ok"; }',
+  '});',
+].join("\r\n");
+
 function llmsTxt() {
   return `# conformance fixture
 
@@ -88,6 +112,7 @@ Decoy list outside the Skills section (MUST NOT load):
 - [c_origin](/skills/c_origin/SKILL.md): Fetches own origin. <!-- skill: ${JSON.stringify({ version: "1.0.0", sha256: sha(SKILL_MD_GOOD), tool: "/skills/c_origin/tool.js", tool_sha256: sha(T_ORIGIN) })} -->
 - [c_search](/skills/c_search/SKILL.md): Scoped memory search (memory is tampered). <!-- skill: ${JSON.stringify({ version: "1.0.0", tool: "/skills/c_search/tool.js", tool_sha256: sha(T_SEARCH), scope: "alpha" })} -->
 - [c_sum](/skills/c_sum2/SKILL.md): Same public name as line 1 (collision). <!-- skill: ${JSON.stringify({ version: "1.0.0", tool: "/skills/c_sum/tool.js", tool_sha256: sha(T_SUM) })} -->
+- [c_crlf](/skills/c_crlf/SKILL.md): Served with CRLF; declared hash is of the exact bytes. <!-- skill: ${JSON.stringify({ version: "1.0.0", tool: "/skills/c_crlf/tool.js", tool_sha256: sha(T_CRLF) })} -->
 - [c_badscope](/skills/x/SKILL.md): Invalid scope value. <!-- skill: ${JSON.stringify({ version: "1.0.0", tool: "/skills/c_sum/tool.js", tool_sha256: sha(T_SUM), scope: "Not A Scope" })} -->
 `;
 }
@@ -101,6 +126,7 @@ const ROUTES = {
   "/skills/c_origin/tool.js": [() => T_ORIGIN, "application/javascript"],
   "/skills/c_origin/SKILL.md": [() => SKILL_MD_BAD, "text/markdown"], // sha declarado = del bueno => mismatch
   "/skills/c_search/tool.js": [() => T_SEARCH, "application/javascript"],
+  "/skills/c_crlf/tool.js": [() => T_CRLF, "application/javascript"],
   "/skills/decoy/tool.js": [() => T_SUM, "application/javascript"],
   "/mem.snapshot": [() => FAKE_SNAPSHOT, "application/json"],
   "/data.json": [() => JSON.stringify({ conformance: true }), "application/json"],
@@ -150,6 +176,12 @@ check("C13", "SHOULD", "ext v0.5 §2.2", "receta con sha256 mismatch se OMITE pe
   const uris = await ctx.listResourceUris();
   return !uris.includes("skill://c_origin") && ctx.toolNames.includes("c_origin");
 });
+check("C15", "MUST", "ext v0.5 §3.3 / §4.1", "bytes tal cual se sirven: skill con CRLF y hash de los bytes exactos CARGA (el runtime NO normaliza)", async (ctx) => {
+  if (!ctx.toolNames.includes("c_crlf")) return false;
+  const r = await ctx.call("c_crlf", {});
+  return !r.isError && r.value === "crlf-ok";
+});
+
 check("C14", "MUST", "ext v0.5 §3.2 (Exposure)", "tool inexistente => error controlado, no crash del runtime", async (ctx) => {
   const r = await ctx.call("no_such_tool_xyz", {});
   if (!(r.isError === true || r.rpcError)) return false;
