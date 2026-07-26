@@ -261,13 +261,46 @@ async function main() {
 
   const full = cmd.replace("{origin}", origin);
   console.log(`runtime bajo prueba: ${full}\n`);
-  const isWin = process.platform === "win32";
-  const child = spawn(full, [], { shell: true, stdio: ["pipe", "pipe", isWin ? "pipe" : "inherit"] });
-  if (isWin) child.stderr.on("data", () => {});
+  // stderr del runtime: se CAPTURA en todas las plataformas y se muestra cuando
+  // hace falta (fallo de MUST, o error duro como un timeout). Antes iba a
+  // "inherit" en Unix y se DESCARTABA en Windows, asi que un runtime que fallaba
+  // la conformancia no dejaba nada con que diagnosticar en la plataforma donde
+  // mas problemas de este tipo aparecen — y en Unix se mezclaba en vivo con las
+  // lineas de los checks, sin quedar asociado al fallo.
+  const child = spawn(full, [], { shell: true, stdio: ["pipe", "pipe", "pipe"] });
+  const errChunks = [];
+  let errBytes = 0;
+  const ERR_CAP = 64 * 1024; // suficiente para diagnosticar, sin volcar un log entero
+  child.stderr.on("data", (d) => {
+    if (errBytes >= ERR_CAP) return;
+    errBytes += d.length;
+    errChunks.push(d.toString());
+  });
+  const runtimeStderr = () => {
+    const t = errChunks.join("").trimEnd();
+    if (!t) return "  (el runtime no escribio nada en stderr)";
+    const lines = t.split(/\r?\n/);
+    const shown = lines.slice(-40);
+    return (lines.length > shown.length ? `  … (${lines.length - shown.length} lineas previas omitidas)\n` : "") +
+      shown.map((l) => "  " + l).join("\n") +
+      (errBytes >= ERR_CAP ? "\n  … (truncado a " + ERR_CAP + " bytes)" : "");
+  };
   const drv = makeDriver(child);
 
-  // contexto que ven los checks
-  const listed = await drv.request("tools/list");
+  // contexto que ven los checks. Si el runtime no contesta (se cayo al arrancar,
+  // rechazo todas las skills, no habla MCP por stdio...) el kit moria con un stack
+  // trace de SU propio timeout, que no dice nada del runtime bajo prueba.
+  let listed;
+  try {
+    listed = await drv.request("tools/list");
+  } catch (e) {
+    console.log(`\nNOT CONFORMANT: el runtime no respondio a tools/list (${e.message}).`);
+    console.log("stderr del runtime:");
+    console.log(runtimeStderr());
+    try { child.kill(); } catch { /* best-effort */ }
+    server.close();
+    return 1;
+  }
   const tools = (listed.result && listed.result.tools) || [];
   const ctx = {
     toolNames: tools.map((t) => t.name),
@@ -308,6 +341,11 @@ async function main() {
     return 0;
   }
   console.log(`NOT CONFORMANT: ${mustFail} MUST check(s) fallidos (${shouldWarn} SHOULD warning(s))`);
+  // El diagnostico del propio runtime suele decir POR QUE fallo (que skill
+  // rechazo y con que hash, que capability falto). Se muestra solo al fallar:
+  // en verde seria ruido.
+  console.log("\nstderr del runtime (para diagnosticar):");
+  console.log(runtimeStderr());
   return 1;
 }
 
