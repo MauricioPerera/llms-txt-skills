@@ -4,6 +4,15 @@ All notable changes to the [`@rckflr/llms-skills`](https://www.npmjs.com/package
 package. Format based on [Keep a Changelog](https://keepachangelog.com/); dates
 are the npm publish dates.
 
+## [0.4.1] — 2026-08-29
+
+### Fixed
+- `memory`'s generated SKILL.md (`search_knowledge`/`get_concept`/
+  `list_concepts`) cited a stale "Executable Skills v0.4 §2.4" — the
+  extension has been at v0.5 for a while, section 2.4 unchanged. Text-only
+  fix; changes the sha256 these three skills declare on next `memory`/
+  `publish` run.
+
 ## [0.4.0] — 2026-07-10
 
 ### Added

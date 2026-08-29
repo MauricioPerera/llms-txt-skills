@@ -1,6 +1,6 @@
 {
   "name": "@rckflr/llms-skills",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "One-command publisher CLI for the llms.txt Skills standard: scaffold, hash, sign, and sync the ## Skills section + .well-known/agent-skills/index.json. Byte-identical to the reference Python generator; zero hard dependencies (BM25 knowledge snapshots via an optional wasm engine).",
   "type": "module",
   "license": "MIT",
