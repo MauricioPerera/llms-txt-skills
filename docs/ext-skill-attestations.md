@@ -2,7 +2,7 @@
 
 **Status:** Draft (v0.4)
 **Date:** 2026-07-09
-**Extends:** [Extension: Executable Skills](./ext-executable-skills.md) (v0.4)
+**Extends:** [Extension: Executable Skills](./ext-executable-skills.md) (v0.5)
 **Design donor:** the three-layer knowledge-governance PoC in [ccdd/examples/okf-integration](https://github.com/MauricioPerera/ccdd/tree/main/examples/okf-integration) (working Ed25519 attestation + freshness tooling), adapted here to executable skills.
 
 ---

@@ -7,8 +7,8 @@
 
 ## Docs
 
-- [RFC (v0.8)](/rfc-skills-in-llms-txt.md)
-- [Executable Skills extension (v0.4)](/ext-executable-skills.md)
+- [RFC (v0.10)](/rfc-skills-in-llms-txt.md)
+- [Executable Skills extension (v0.5)](/ext-executable-skills.md)
 - [Skill Attestations extension (v0.4)](/ext-skill-attestations.md)
 - [Adoption status](/adoption.md)
 
