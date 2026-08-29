@@ -21,39 +21,39 @@
       "type": "skill-md",
       "description": "BM25 search over this origin's published knowledge bundle. Use it to find which concept answers a question before fetching it.",
       "url": "/skills/search_knowledge/SKILL.md",
-      "digest": "sha256:a093440b30bb81abafc12014a130635b6acc22c608e2dae3914511e058fbde5e",
+      "digest": "sha256:652e3bc0f8edc27f225177d3874e9cf09dae5cdf60ee98526c99c000902f9cde",
       "version": "0.1.0",
       "license": "MIT",
-      "sha256": "a093440b30bb81abafc12014a130635b6acc22c608e2dae3914511e058fbde5e",
+      "sha256": "652e3bc0f8edc27f225177d3874e9cf09dae5cdf60ee98526c99c000902f9cde",
       "tool": "/skills/search_knowledge/tool.js",
       "tool_sha256": "b13a3c0448c4ee8c744b1ee33b1dd441ecc0c7c3552e23f04b5f9aaf79049ab7",
-      "signature": "xccgHfdGrhKz7HeKBXkFcjuufcv8AGQgzZJsZfVMz+56s8w4wRpNbYNvxdLHMtECVx8FTlPCBfiksy30hAlJBQ=="
+      "signature": "1eF6aVcno281ENWJrZ/ApwLvG76KzM6G8nwDK4p0YdD5Bn7aFg3HFIm/LTXt12WlzdwemTm07BppaZXhe01RDw=="
     },
     {
       "name": "get_concept",
       "type": "skill-md",
       "description": "Fetch the full markdown of a knowledge concept by id from this origin's bundle.",
       "url": "/skills/get_concept/SKILL.md",
-      "digest": "sha256:c63b95427c4888b215b476442044d0e8ceeb9e4bd7e15eac7d762c9754988655",
+      "digest": "sha256:9d03b48ee075f8d3aae593a93e8dbb7a1169d07cc940399dd886bf9bb279badf",
       "version": "0.1.0",
       "license": "MIT",
-      "sha256": "c63b95427c4888b215b476442044d0e8ceeb9e4bd7e15eac7d762c9754988655",
+      "sha256": "9d03b48ee075f8d3aae593a93e8dbb7a1169d07cc940399dd886bf9bb279badf",
       "tool": "/skills/get_concept/tool.js",
       "tool_sha256": "d9fe77437f3aa14f4bdd685410ce06a90a99117057c1e9debdc1791726021e42",
-      "signature": "qwWtB31jrJb/QWxnWs4oBreZ2ga5htK+0SKLKioTRLmYna8eQiql8C2Ca+6c6nywra1Y7mm3ObroPvUNM1s3AQ=="
+      "signature": "OyLKH4Q1kd9qHsoJDqqa4KmkIgCquaHAGNW/LuNQ1/5OeHTBu6nldQKfB+w+v3gXcbBYMQQpGWghhy0vZRcBDg=="
     },
     {
       "name": "list_concepts",
       "type": "skill-md",
       "description": "List every knowledge concept this origin publishes (id, type, title, description).",
       "url": "/skills/list_concepts/SKILL.md",
-      "digest": "sha256:3576ada3394b026b552620b009c8b3d6690995778d0cb63c4ca32fe78e793c19",
+      "digest": "sha256:f2fa3ea29676306c8acdc0a15d6a2b13ef4e75ff8cb91cdd17a400d5a18c63da",
       "version": "0.1.0",
       "license": "MIT",
-      "sha256": "3576ada3394b026b552620b009c8b3d6690995778d0cb63c4ca32fe78e793c19",
+      "sha256": "f2fa3ea29676306c8acdc0a15d6a2b13ef4e75ff8cb91cdd17a400d5a18c63da",
       "tool": "/skills/list_concepts/tool.js",
       "tool_sha256": "457bb8545c20c2a609c9c59919617dbd6f1f9664aa7a55613b6e86cf95325bc4",
-      "signature": "HwomzE92+wtnBse7TSN3BirrOWnHSljQfMMx2JJur48rlFd72KPLxGy6ox5Xug6Fy19AF0kUCy/QIW1cYyGGBg=="
+      "signature": "BiuiO+MUZdT2sQqa2ZLGTkP/aawFc/wxdZWpy/202MFvD4AYZ+lK7qIzwV1C3HHOdbM4wFsxIZOrj7OnCHZTDw=="
     }
   ]
 }
