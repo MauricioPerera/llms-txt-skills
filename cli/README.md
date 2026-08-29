@@ -11,6 +11,12 @@ what a runtime — [mcpwasm](https://github.com/MauricioPerera/mcpwasm), the MCP
 server, agents.txt — verifies. **Zero dependencies** (ed25519 and hashing via
 Node's built-in `crypto`).
 
+> Three independent version numbers appear in this doc — this CLI's own
+> (see `package.json`), the spec's (currently Executable Skills v0.5), and
+> the mcpwasm runtime's (currently 0.11.x). Every version mentioned below is
+> named right next to the thing it belongs to; none of them refer to this
+> CLI unless it's explicitly called out as this package's version.
+
 ```bash
 npx @rckflr/llms-skills <command>
 ```
@@ -76,14 +82,17 @@ npx @rckflr/llms-skills memory ./knowledge --scope kdd
 ```
 
 The manifest and the rendered lines carry `"scope":"kdd"`; runtimes
-(mcpwasm ≥ 0.6.0) expose the tools as `kdd__search_knowledge` etc. and bind
+(the **mcpwasm runtime**, version ≥ 0.6.0 — not this CLI's version) expose
+the tools as `kdd__search_knowledge` etc. and bind
 each scope's memory to its own snapshot — no name collisions, one
 `skills-memory` line per scope. Published bytes and hashes are untouched
 (the rename is runtime-side), so `search_knowledge` stays the universal
 template.
 
-Consumers need nothing new: `npx -y @rckflr/mcpwasm <origin>` (>= 0.4.0)
-verifies the snapshot and injects `host.memorySearch` on both runtimes.
+Consumers need nothing new: `npx -y @rckflr/mcpwasm <origin>` — that's the
+**mcpwasm runtime**, version >= 0.4.0 (again, not this CLI's version, which
+happens to share the same number at the time of writing) — verifies the
+snapshot and injects `host.memorySearch` on both runtimes.
 `memory <bundle> --check` is the CI guard. The BM25 engine
 (`@rckflr/minimemory`, ~630 KB wasm) is an optionalDependency — installed by
 default; if omitted, `memory` fails with a clear message and every other
