@@ -3,7 +3,7 @@
 // Turns an OKF bundle (https://github.com/GoogleCloudPlatform/knowledge-catalog
 // okf/SPEC.md v0.1: *.md concepts with `type` frontmatter; index.md/log.md
 // reserved) into the origin-memory artifacts the Executable Skills extension
-// v0.4 §2.4 defines and the mcpwasm runtimes already consume:
+// v0.5 §2.4 defines and the mcpwasm runtimes already consume:
 //
 //   - a BM25 snapshot (@rckflr/minimemory, format minimemory-okf-v1),
 //     CANONICALIZED for byte-determinism (see canonicalizeSnapshot),
